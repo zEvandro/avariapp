@@ -1,6 +1,10 @@
-const CACHE = 'avariapp-v1';
+const CACHE = 'avariapp-v2';
+const URL_BASE = '/avariapp/';
 
 self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.add(URL_BASE))
+  );
   self.skipWaiting();
 });
 
@@ -16,11 +20,15 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.open(CACHE).then(c =>
-      fetch(e.request).then(res => {
-        c.put(e.request, res.clone());
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
         return res;
-      }).catch(() => c.match(e.request))
-    )
+      }).catch(() => caches.match(URL_BASE));
+    })
   );
 });

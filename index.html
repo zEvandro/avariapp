@@ -2993,8 +2993,8 @@ function setupPWA() {
       name: 'AvariApp',
       short_name: 'AvariApp',
       description: 'AvariApp — Registro de avarias Câmara Fria - Lactalis Brasil',
-      start_url: './',
-      scope: './',
+      start_url: '/avariapp/',
+      scope: '/avariapp/',
       display: 'standalone',
       background_color: '#0D1117',
       theme_color: '#1F3864',
@@ -3025,7 +3025,7 @@ function setupPWA() {
 
   // Service Worker para cache offline e instalação PWA
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('/avariapp/sw.js', { scope: '/avariapp/' })
       .then(() => console.log('SW registrado'))
       .catch(e => console.log('SW erro:', e));
   }
