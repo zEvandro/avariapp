@@ -926,20 +926,6 @@
   </div>
 </div>
 
-<!-- Banner de instalação PWA -->
-<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#1F3864;padding:12px 16px;align-items:center;gap:12px;border-top:2px solid #4A90D9;box-shadow:0 -4px 20px rgba(0,0,0,.5)">
-  <div style="flex:1">
-    <p style="font-size:13px;font-weight:700;color:#fff;margin:0">📲 Instalar AvariApp</p>
-    <p style="font-size:11px;color:#79C0FF;margin:2px 0 0">Acesso rápido na tela inicial, funciona offline</p>
-  </div>
-  <button onclick="installPWA()" style="padding:9px 18px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap">
-    Instalar
-  </button>
-  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="padding:9px;background:transparent;color:#7D8590;border:1px solid #30363D;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">
-    Agora não
-  </button>
-</div>
-
 <!-- Modal Gerenciar Produtos -->
 <div id="prod-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeProdManager()">
   <div class="modal-sheet">
@@ -2988,19 +2974,15 @@ function renderCNList() {
 let deferredInstallPrompt = null;
 
 function setupPWA() {
-  // Capturar o prompt de instalação
+  // Deixa o Chrome mostrar o prompt nativo de instalação
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
     deferredInstallPrompt = e;
-    const banner = document.getElementById('pwa-banner');
-    if (banner) banner.style.display = 'flex';
+    // NÃO cancela o evento — Chrome mostra o banner nativo automaticamente
   });
 
   window.addEventListener('appinstalled', () => {
-    const banner = document.getElementById('pwa-banner');
-    if (banner) banner.style.display = 'none';
     deferredInstallPrompt = null;
-    showToast('✓ AvariApp instalado com sucesso!', 'success');
+    showToast('✓ AvariApp instalado!', 'success');
   });
 
   // Service Worker
