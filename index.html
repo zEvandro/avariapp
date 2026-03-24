@@ -8,7 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AvariApp">
-<link rel="manifest" id="pwa-manifest">
+<link rel="manifest" href="/avariapp/manifest.json">
+<link rel="apple-touch-icon" href="/avariapp/icon.png">
 <title>AvariApp</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -2987,27 +2988,6 @@ function renderCNList() {
 let deferredInstallPrompt = null;
 
 function setupPWA() {
-  // Manifest com ícone real
-  try {
-    const manifest = {
-      name: 'AvariApp',
-      short_name: 'AvariApp',
-      description: 'AvariApp — Registro de avarias Câmara Fria - Lactalis Brasil',
-      start_url: '/avariapp/',
-      scope: '/avariapp/',
-      display: 'standalone',
-      background_color: '#0D1117',
-      theme_color: '#1F3864',
-      orientation: 'portrait',
-      icons: [
-        { src: AVARIAPP_ICON, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-        { src: AVARIAPP_ICON, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-      ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
-    document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(blob));
-  } catch(e) {}
-
   // Capturar o prompt de instalação
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
@@ -3023,7 +3003,7 @@ function setupPWA() {
     showToast('✓ AvariApp instalado com sucesso!', 'success');
   });
 
-  // Service Worker para cache offline e instalação PWA
+  // Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/avariapp/sw.js', { scope: '/avariapp/' })
       .then(() => console.log('SW registrado'))
