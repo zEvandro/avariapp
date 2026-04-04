@@ -192,6 +192,8 @@
   .screen.exit-right { opacity: 0; transform: translateX(50px);  pointer-events: none; position: absolute; }
   .screens-wrapper   { position: relative; overflow: hidden; }
 
+  /* ── Card ── */
+  .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -757,7 +759,7 @@
     <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
       <button class="manage-btn" onclick="openProdManager()">📦 Gerenciar produtos / Adicionar novos códigos</button>
       <button class="manage-btn" onclick="openCNManager()">🏷️ Gerenciar Naturezas e Causas</button>
-      <button style="width:100%;padding:10px;background:transparent;border:1px solid var(--red-border);color:var(--red-text);border-radius:var(--radius-md);font-size:13px;font-family:inherit;cursor:pointer" onclick="if(confirm('Limpar todos os dados e começar novo registro?')){localStorage.removeItem('avaria_draft');location.reload();}">🗑 Limpar e começar novo registro</button>
+      <button style="width:100%;padding:10px;background:transparent;border:1px solid var(--red-border);color:var(--red-text);border-radius:var(--radius-md);font-size:13px;font-family:inherit;cursor:pointer" onclick="confirmarLimparRegistro()">🗑 Limpar e começar novo registro</button>
     </div>
   </div>
 
@@ -914,7 +916,7 @@
 
     <div class="menu-divider"></div>
 
-    <button class="menu-item" onclick="closeSideMenu(); if(confirm('Limpar todos os dados e começar novo registro?')){localStorage.removeItem('avaria_draft');location.reload();}">
+    <button class="menu-item" onclick="closeSideMenu(); confirmarLimparRegistro()">
       <div class="menu-item-icon" style="background:#2D0E0E">🗑️</div>
       <div class="menu-item-info" style="color:var(--red-text)"><strong style="color:var(--red-text)">Novo Registro</strong><span>Limpar todos os dados</span></div>
     </button>
@@ -959,6 +961,13 @@
       <div id="prod-list" class="prod-list"></div>
     </div>
     <div class="modal-footer">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button onclick="exportarConfig()" style="flex:1;padding:10px;background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue-text);border-radius:var(--radius-md);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Exportar Config</button>
+        <label style="flex:1;padding:10px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);border-radius:var(--radius-md);font-size:12px;font-weight:600;cursor:pointer;text-align:center">
+          📥 Importar Config
+          <input type="file" accept=".json" style="display:none" onchange="importarConfig(this)">
+        </label>
+      </div>
       <button onclick="closeProdManager()" style="width:100%;padding:12px;background:var(--bg-item);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:14px;cursor:pointer;font-family:inherit">
         Fechar
       </button>
@@ -967,6 +976,68 @@
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════
+// MÓDULO IndexedDB — armazenamento de fotos (grandes)
+// Resolve o QuotaExceededError silencioso do localStorage
+// ═══════════════════════════════════════════════════════
+const IDB_NAME  = 'avariapp_db';
+const IDB_VER   = 1;
+const IDB_STORE = 'photos';
+const IDB_KEY   = 'current';
+
+function _openIDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('IDB indisponivel')); return; }
+    const req = indexedDB.open(IDB_NAME, IDB_VER);
+    req.onupgradeneeded = e => { e.target.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function savePhotosIDB(itemPhotos, paletePhotos) {
+  try {
+    const db = await _openIDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put({ itemPhotos, paletePhotos }, IDB_KEY);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror    = e => { db.close(); reject(e.target.error); };
+    });
+  } catch(e) { console.warn('[IDB] savePhotos:', e); }
+}
+
+async function loadPhotosIDB() {
+  try {
+    const db = await _openIDB();
+    return await new Promise((resolve) => {
+      const tx  = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+      req.onsuccess = e => { db.close(); resolve(e.target.result || null); };
+      req.onerror   = ()  => { db.close(); resolve(null); };
+    });
+  } catch(e) { return null; }
+}
+
+async function clearPhotosIDB() {
+  try {
+    const db = await _openIDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).clear();
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror    = ()  => { db.close(); resolve(); };
+    });
+  } catch(e) { console.warn('[IDB] clearPhotos:', e); }
+}
+
+// Escapa HTML para evitar XSS em innerHTML com dados do usuario
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 const DATA = {
   P: {
     label: 'Picking / Expedição',
@@ -1328,23 +1399,6 @@ const ITAMBE_DB = [{"c":"600405303","d":"MANTEIGA EXTRA S/SAL CAIXA 5KG"},{"c":"
 
 // ── AUTOCOMPLETE ──
 let acIdx = {};
-function acSearch(id, val) {
-  const list = document.getElementById('ac-list-' + id);
-  if (!list) return;
-  const q = val.trim();
-  if (q.length < 3) { list.style.display = 'none'; acIdx[id] = -1; return; }
-  const results = PRODUTOS_DB.filter(p => p.c.includes(q) || p.d.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
-  if (!results.length) { list.style.display = 'none'; return; }
-  list.innerHTML = results.map((p, i) =>
-    `<div class="autocomplete-item" data-idx="${i}" onmousedown="acSelect(${id},'${p.c}','${p.d.replace(/'/g,"\\'")}')">
-      <div class="autocomplete-code">${p.c}</div>
-      <div>${p.d}</div>
-    </div>`
-  ).join('');
-  list.style.display = 'block';
-  acIdx[id] = -1;
-}
-
 function acSelect(id, code, desc) {
   const it = items.find(x => x.id === id); if (!it) return;
   it.cod = code; it.desc = desc;
@@ -1477,49 +1531,71 @@ function getSigData() { return sigCanvas && sigCanvas.toDataURL(); }
 
 // ── AUTOSAVE RASCUNHO ──
 function saveDraft() {
+  // Monta rascunho SEM fotos (fotos vao para o IndexedDB, nao localStorage)
   const draft = {
-    camara: document.getElementById('camara')?.value||'',
-    operador: document.getElementById('operador')?.value||'',
-    matricula: document.getElementById('matricula')?.value||'',
-    supervisor: document.getElementById('supervisor')?.value||'',
-    data: document.getElementById('data')?.value||'',
-    turno: document.getElementById('turno')?.value||'',
-    totPaletes: document.getElementById('tot-paletes')?.value||'',
-    obs: document.getElementById('obs')?.value||'',
-    items: items.map(it => ({...it})),
+    camara:     document.getElementById('camara')?.value     || '',
+    operador:   document.getElementById('operador')?.value   || '',
+    matricula:  document.getElementById('matricula')?.value  || '',
+    supervisor: document.getElementById('supervisor')?.value || '',
+    data:       document.getElementById('data')?.value       || '',
+    turno:      document.getElementById('turno')?.value      || '',
+    totPaletes: document.getElementById('tot-paletes')?.value|| '',
+    obs:        document.getElementById('obs')?.value        || '',
+    // fotos EXCLUIDAS do draft (salvas separadamente no IDB)
+    items: items.map(it => {
+      // eslint-disable-next-line no-unused-vars
+      const { photos, ...rest } = it;
+      return rest;
+    }),
     idCnt,
-    sig: getSigData(),
-    paletePhotos,
-    protocolo: protocoloAtual,
+    sig:        getSigData(),
+    protocolo:  protocoloAtual,
   };
+
   try {
     localStorage.setItem('avaria_draft', JSON.stringify(draft));
     const lbl = document.getElementById('draft-lbl');
-    if (lbl) { lbl.style.display='inline-block'; setTimeout(()=>lbl.style.display='none', 2000); }
-  } catch(e) {}
+    if (lbl) { lbl.style.display = 'inline-block'; setTimeout(() => lbl.style.display = 'none', 2000); }
+  } catch(e) {
+    // Avisa o usuario quando o localStorage enche (ex: muitos dados de texto)
+    showToast('Aviso: nao foi possivel salvar rascunho. Armazenamento cheio!', 'error');
+    console.warn('[Draft] localStorage cheio:', e);
+  }
+
+  // Salva fotos no IndexedDB (async, sem bloquear a UI)
+  const itemPhotos = {};
+  items.forEach(it => {
+    if (it.photos && it.photos.length > 0) itemPhotos[it.id] = it.photos;
+  });
+  savePhotosIDB(itemPhotos, paletePhotos);
 }
 
-function loadDraft() {
+async function loadDraft() {
   try {
     const raw = localStorage.getItem('avaria_draft');
-    if (!raw) return;
+    if (!raw) return false;
     const draft = JSON.parse(raw);
-    if (draft.camara) document.getElementById('camara').value = draft.camara;
-    if (draft.operador) document.getElementById('operador').value = draft.operador;
-    if (draft.matricula) document.getElementById('matricula').value = draft.matricula;
+
+    if (draft.camara)     document.getElementById('camara').value     = draft.camara;
+    if (draft.operador)   document.getElementById('operador').value   = draft.operador;
+    if (draft.matricula)  document.getElementById('matricula').value  = draft.matricula;
     if (draft.supervisor) document.getElementById('supervisor').value = draft.supervisor;
-    if (draft.data) document.getElementById('data').value = draft.data;
-    if (draft.turno) document.getElementById('turno').value = draft.turno;
-    if (draft.totPaletes) document.getElementById('tot-paletes').value = draft.totPaletes;
-    if (draft.obs) document.getElementById('obs').value = draft.obs;
-    if (draft.idCnt) idCnt = draft.idCnt;
+    if (draft.data)       document.getElementById('data').value       = draft.data;
+    if (draft.turno)      document.getElementById('turno').value      = draft.turno;
+    if (draft.totPaletes) document.getElementById('tot-paletes').value= draft.totPaletes;
+    if (draft.obs)        document.getElementById('obs').value        = draft.obs;
+    if (draft.idCnt)      idCnt = draft.idCnt;
+    if (draft.protocolo)  protocoloAtual = draft.protocolo;
+
     if (draft.items && draft.items.length) {
-      items = draft.items;
+      // Restaura itens sem fotos (fotos virao do IDB abaixo)
+      items = draft.items.map(it => ({ ...it, photos: [] }));
       const list = document.getElementById('items-list');
       list.innerHTML = '';
       items.forEach(it => {
         const div = document.createElement('div');
-        div.className = 'item-card'; div.id = 'item-' + it.id;
+        div.className = 'item-card';
+        div.id = 'item-' + it.id;
         div.dataset.open = 'false';
         list.appendChild(div);
         renderItem(it);
@@ -1527,10 +1603,8 @@ function loadDraft() {
       recalcCaixas();
       updateSummary();
     }
-    if (draft.paletePhotos && draft.paletePhotos.length) {
-      paletePhotos = draft.paletePhotos;
-      renderPaletePhotos();
-    }
+
+    // Restaura assinatura
     if (draft.sig) {
       setTimeout(() => {
         if (!sigCanvas) initSig();
@@ -1539,7 +1613,32 @@ function loadDraft() {
         img.src = draft.sig;
       }, 300);
     }
-  } catch(e) {}
+
+    // Restaura fotos do IndexedDB (async)
+    const photoData = await loadPhotosIDB();
+    if (photoData) {
+      // Fotos por item
+      if (photoData.itemPhotos) {
+        items.forEach(it => {
+          if (photoData.itemPhotos[it.id]) {
+            it.photos = photoData.itemPhotos[it.id];
+            renderPhotos(it.id, it.photos);
+          }
+        });
+      }
+      // Fotos do palete
+      if (photoData.paletePhotos && photoData.paletePhotos.length) {
+        paletePhotos = photoData.paletePhotos;
+        renderPaletePhotos();
+      }
+    }
+
+    updateProtocoloBadge();
+    return true;
+  } catch(e) {
+    console.warn('[loadDraft] Erro:', e);
+    return false;
+  }
 }
 
 // ── VALIDATION ──
@@ -1620,17 +1719,6 @@ function compartilharWA() {
   setTimeout(() => {
     window.open('https://wa.me/?text=' + msg, '_blank');
   }, 1500);
-}
-
-function removeItem(id) {
-  items = items.filter(x => x.id !== id);
-  document.getElementById('item-' + id)?.remove();
-  items.forEach((it, i) => {
-    const e = document.getElementById('item-' + it.id);
-    if (e) e.querySelector('.item-num').textContent = 'Item ' + (i + 1);
-  });
-  recalcCaixas();
-  saveDraft();
 }
 
 function maskDate(input) {
@@ -2033,7 +2121,12 @@ function loadCustomProducts() {
 }
 
 function saveCustomProducts() {
-  try { localStorage.setItem('custom_products', JSON.stringify(customProducts)); } catch(e) {}
+  try {
+    localStorage.setItem('custom_products', JSON.stringify(customProducts));
+  } catch(e) {
+    showToast('Erro ao salvar produtos personalizados. Armazenamento cheio!', 'error');
+    console.warn('[saveCustomProducts]', e);
+  }
 }
 
 function getBaseDB() {
@@ -2089,13 +2182,15 @@ function renderProdList(list) {
   if (count) count.textContent = `${list.length} produto${list.length!==1?'s':''} — ${customProducts.length} personalizado${customProducts.length!==1?'s':''}`;
   el.innerHTML = list.map(p => {
     const isCustom = customCodes.has(p.c);
+    const safeCode = escHtml(p.c);
+    const safeDesc = escHtml(p.d);
     return `<div class="prod-row ${isCustom?'custom':''}">
       <div class="prod-row-info">
-        <div class="prod-row-code">${p.c}</div>
-        <div class="prod-row-desc">${p.d}</div>
+        <div class="prod-row-code">${safeCode}</div>
+        <div class="prod-row-desc">${safeDesc}</div>
       </div>
       ${isCustom ? `<span class="prod-row-badge">Novo</span>` : ''}
-      ${isCustom ? `<button class="prod-del" onclick="deleteCustomProduct('${p.c}')">×</button>` : ''}
+      ${isCustom ? `<button class="prod-del" onclick="deleteCustomProduct('${safeCode}')">×</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -2367,7 +2462,7 @@ function gerarProtocolo(camara) {
   const prefix = cfg ? cfg.prefix : 'AVR';
   const key = `proto_${prefix}_${a}${m}${d}`;
   let seq = parseInt(localStorage.getItem(key)||'0') + 1;
-  localStorage.setItem(key, seq);
+  try { localStorage.setItem(key, seq); } catch(e) { console.warn('[gerarProtocolo] localStorage:', e); }
   return buildProtocoloStr(camara, seq);
 }
 
@@ -2377,7 +2472,7 @@ function initProtocolo() {
   if (!protocoloAtual) {
     const draft = localStorage.getItem('avaria_draft');
     if (draft) {
-      try { protocoloAtual = JSON.parse(draft).protocolo || ''; } catch(e) {}
+      try { protocoloAtual = JSON.parse(draft).protocolo || ''; } catch(e) { console.warn('[initProtocolo] JSON inválido:', e); }
     }
     // só gera número novo se não veio do rascunho
     if (!protocoloAtual) {
@@ -2793,6 +2888,92 @@ function closeSideMenu() {
   document.body.style.overflow = '';
 }
 
+// ── LIMPAR REGISTRO (modal seguro, sem confirm() bloqueado em PWA) ──
+function confirmarLimparRegistro() {
+  const body = document.getElementById('confirm-body');
+  if (body) {
+    body.innerHTML = `
+      <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">Tem certeza?</p>
+      <div style="padding:12px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius-sm);font-size:13px;color:var(--red-text)">
+        🗑️ Todos os itens, fotos e dados do registro atual serão apagados.<br>
+        <strong>Produtos e naturezas personalizados serão mantidos.</strong>
+      </div>
+    `;
+  }
+  const btn = document.getElementById('confirm-action-btn');
+  if (btn) {
+    btn.textContent = '🗑️ Sim, limpar registro';
+    btn.style.background = 'var(--red-bg)';
+    btn.style.border = '1px solid var(--red-border)';
+    btn.style.color = 'var(--red-text)';
+    btn.onclick = async () => {
+      closeConfirmModal();
+      btn.style.cssText = '';
+      localStorage.removeItem('avaria_draft');
+      await clearPhotosIDB();
+      location.reload();
+    };
+  }
+  document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+// ── EXPORTAR / IMPORTAR CONFIGURAÇÕES ──
+function exportarConfig() {
+  try {
+    const config = {
+      versao: '1.0',
+      exportado: new Date().toISOString(),
+      custom_products: JSON.parse(localStorage.getItem('custom_products') || '[]'),
+      custom_cn:       JSON.parse(localStorage.getItem('custom_cn')       || '{}'),
+    };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `avariapp_config_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Configurações exportadas com sucesso!', 'success');
+  } catch(e) {
+    showToast('Erro ao exportar configurações.');
+    console.warn('[exportarConfig]', e);
+  }
+}
+
+function importarConfig(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const config = JSON.parse(e.target.result);
+      let msg = '';
+      if (Array.isArray(config.custom_products) && config.custom_products.length) {
+        // Mescla sem duplicar
+        const existing = JSON.parse(localStorage.getItem('custom_products') || '[]');
+        const merged   = [...existing];
+        config.custom_products.forEach(p => {
+          if (!merged.find(x => x.c === p.c)) merged.push(p);
+        });
+        localStorage.setItem('custom_products', JSON.stringify(merged));
+        customProducts = merged;
+        msg += `${config.custom_products.length} produto(s) importado(s). `;
+      }
+      if (config.custom_cn && typeof config.custom_cn === 'object') {
+        localStorage.setItem('custom_cn', JSON.stringify(config.custom_cn));
+        loadCustomCN();
+        msg += 'Naturezas/causas importadas.';
+      }
+      showToast(msg || 'Nenhum dado encontrado no arquivo.', msg ? 'success' : 'error');
+    } catch(err) {
+      showToast('Arquivo inválido. Use um JSON exportado pelo AvariApp.');
+      console.warn('[importarConfig]', err);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
 function scrollToCard(id) {
   const screenMap = {
     'card-identificacao': 1,
@@ -2861,7 +3042,7 @@ function loadCustomCN() {
         if (!DATA[tipo].causas.find(n=>n.c===item.c)) DATA[tipo].causas.push(item);
       });
     });
-  } catch(e) {}
+  } catch(e) { console.warn('[loadCustomCN] Dados corrompidos:', e); }
 }
 
 function saveCustomCN() {
@@ -2877,7 +3058,10 @@ function saveCustomCN() {
       'cau-F': DATA['F'].causas.filter(n => !BASE_CAU_F.includes(n.c)),
     };
     localStorage.setItem('custom_cn', JSON.stringify(saved));
-  } catch(e) {}
+  } catch(e) {
+    showToast('Erro ao salvar naturezas/causas. Armazenamento cheio!', 'error');
+    console.warn('[saveCustomCN]', e);
+  }
 }
 
 function openCNManager() {
@@ -2959,13 +3143,15 @@ function renderCNList() {
   if (!list) return;
   list.innerHTML = arr.map(item => {
     const isBase = baseCodes.includes(item.c);
+    const safeCode = escHtml(item.c);
+    const safeName = escHtml(item.l);
     return `<div class="prod-row ${isBase?'':'custom'}">
       <div class="prod-row-info">
-        <div class="prod-row-code">${item.c}</div>
-        <div class="prod-row-desc">${item.l}</div>
+        <div class="prod-row-code">${safeCode}</div>
+        <div class="prod-row-desc">${safeName}</div>
       </div>
       ${!isBase ? `<span class="prod-row-badge">Novo</span>` : ''}
-      ${!isBase ? `<button class="prod-del" onclick="deleteCNItem('${item.c}')">×</button>` : ''}
+      ${!isBase ? `<button class="prod-del" onclick="deleteCNItem('${safeCode}')">×</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -3004,7 +3190,7 @@ function installPWA() {
 }
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   loadCustomProducts();
   loadCustomCN();
   setupPWA();
@@ -3019,18 +3205,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id)?.addEventListener('change', () => { saveDraft(); buildQRCode(); });
   });
 
-  // load rascunho if exists
+  // Tenta restaurar rascunho existente
   const hasDraft = localStorage.getItem('avaria_draft');
   if (hasDraft) {
     try {
       const d = JSON.parse(hasDraft);
       if (d.items && d.items.length > 0) {
-        loadDraft();
-        showToast('✓ Rascunho restaurado automaticamente', 'success');
-        setTimeout(buildQRCode, 400);
-        return;
+        const ok = await loadDraft();
+        if (ok) {
+          showToast('Rascunho restaurado automaticamente', 'success');
+          setTimeout(buildQRCode, 400);
+          return;
+        }
       }
-    } catch(e) {}
+    } catch(e) { console.warn('[DOMContentLoaded] loadDraft:', e); }
   }
   addItem();
   setTimeout(buildQRCode, 300);
