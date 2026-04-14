@@ -1,7 +1,7 @@
 {
   "name": "AvariApp",
   "short_name": "AvariApp",
-  "description": "AvariApp â€” Registro de avarias CÃ¢mara Fria - Lactalis Brasil",
+  "description": "AvariApp — Registro de avarias Câmara Fria - Lactalis Brasil",
   "start_url": "/avariapp/",
   "scope": "/avariapp/",
   "display": "standalone",
@@ -9,7 +9,17 @@
   "theme_color": "#1F3864",
   "orientation": "portrait",
   "icons": [
-    { "src": "icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
