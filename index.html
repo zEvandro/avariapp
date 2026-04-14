@@ -1363,6 +1363,14 @@ function renderItem(it) {
   const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
   const dupBadge = isDup ? `<span class="dup-badge">⚠ repetido</span>` : '';
 
+  // Tags de tipo e natureza para o resumo do cabeçalho
+  const natObj  = it.natureza ? DATA[it.tipo]?.naturezas.find(n => n.c === it.natureza) : null;
+  const tipoTag = it.tipo === 'P'
+    ? `<span class="item-summary-tag p">Picking</span>`
+    : it.tipo === 'F'
+    ? `<span class="item-summary-tag f">Fábrica</span>` : '';
+  const natTag  = natObj ? `<span class="item-summary-tag n">${natObj.l}</span>` : '';
+
   el.innerHTML = `
     <div class="item-header" onclick="toggleItem(${it.id})">
       <span class="item-badge">${idx}</span>
