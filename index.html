@@ -124,6 +124,49 @@
   .header-text h1 { font-size: 13px; font-weight: 600; color: #E6EDF3; line-height: 1.4; }
   .header-text p  { font-size: 11px; color: #7D8590; margin-top: 3px; }
 
+  /* ── Stepper de progresso ── */
+  .stepper {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin-bottom: 16px;
+  }
+  .stepper-step {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    flex: 1;
+  }
+  .stepper-dot-row {
+    display: flex; align-items: center; width: 100%;
+  }
+  .stepper-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    border: 2px solid var(--border);
+    background: var(--bg-card); color: var(--text-muted);
+    flex-shrink: 0; transition: all .25s ease;
+    margin: 0 auto;
+  }
+  .stepper-dot.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff;
+  }
+  .stepper-dot.done {
+    background: var(--green-border); border-color: var(--green-border);
+    color: #fff;
+  }
+  .stepper-line {
+    flex: 1; height: 2px;
+    background: var(--border);
+    transition: background .35s ease;
+  }
+  .stepper-line.done { background: var(--green-border); }
+  .stepper-label {
+    font-size: 10px; color: var(--text-muted);
+    text-align: center; white-space: nowrap;
+    transition: color .25s ease;
+  }
+  .stepper-label.active { color: var(--accent); font-weight: 600; }
+  .stepper-label.done   { color: var(--green-text); }
+
   /* ── Side Menu ── */
   .menu-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.6);
@@ -930,6 +973,35 @@
   </div>
 
   <!-- ═══ TELA 1: IDENTIFICAÇÃO ═══ -->
+
+  <!-- Stepper de progresso -->
+  <div class="stepper" id="app-stepper">
+    <div class="stepper-step">
+      <div class="stepper-dot-row">
+        <div style="flex:1"></div>
+        <div class="stepper-dot active" id="step-dot-1">1</div>
+        <div class="stepper-line" id="step-line-1"></div>
+      </div>
+      <div class="stepper-label active" id="step-label-1">Identificação</div>
+    </div>
+    <div class="stepper-step">
+      <div class="stepper-dot-row">
+        <div class="stepper-line" id="step-line-2"></div>
+        <div class="stepper-dot" id="step-dot-2">2</div>
+        <div class="stepper-line" id="step-line-3"></div>
+      </div>
+      <div class="stepper-label" id="step-label-2">Itens</div>
+    </div>
+    <div class="stepper-step">
+      <div class="stepper-dot-row">
+        <div class="stepper-line" id="step-line-4"></div>
+        <div class="stepper-dot" id="step-dot-3">3</div>
+        <div style="flex:1"></div>
+      </div>
+      <div class="stepper-label" id="step-label-3">Finalizar</div>
+    </div>
+  </div>
+
   <div class="screens-wrapper">
   <div class="screen active" id="screen-1">
     <div class="card" id="card-identificacao">
@@ -1295,7 +1367,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.4.0';
+const APP_VERSION = '2.4.1';
 
 const DATA = {
   P: {
@@ -3022,6 +3094,41 @@ function goToScreen(n) {
   _goToScreen(n);
 }
 
+// ── STEPPER DE PROGRESSO ──
+function updateStepper(n) {
+  // n = tela atual (1, 2 ou 3)
+  const dots   = [1,2,3].map(i => document.getElementById('step-dot-'   + i));
+  const labels = [1,2,3].map(i => document.getElementById('step-label-' + i));
+  // Linhas: 1=direita do dot1, 2=esquerda do dot2, 3=direita do dot2, 4=esquerda do dot3
+  const lines  = [1,2,3,4].map(i => document.getElementById('step-line-' + i));
+
+  dots.forEach((dot, i) => {
+    if (!dot) return;
+    const stepNum = i + 1;
+    dot.classList.remove('active', 'done');
+    if (stepNum < n)      dot.classList.add('done');
+    else if (stepNum === n) dot.classList.add('active');
+    // Ícone de check nas etapas concluídas
+    dot.textContent = stepNum < n ? '✓' : String(stepNum);
+  });
+
+  labels.forEach((lbl, i) => {
+    if (!lbl) return;
+    const stepNum = i + 1;
+    lbl.classList.remove('active', 'done');
+    if (stepNum < n)        lbl.classList.add('done');
+    else if (stepNum === n) lbl.classList.add('active');
+  });
+
+  // Linhas entre os dots ficam verdes quando a etapa anterior está concluída
+  // line-1 e line-2 (ao redor do dot2): verdes quando n >= 2
+  // line-3 e line-4 (ao redor do dot3): verdes quando n >= 3
+  if (lines[0]) lines[0].classList.toggle('done', n >= 2);
+  if (lines[1]) lines[1].classList.toggle('done', n >= 2);
+  if (lines[2]) lines[2].classList.toggle('done', n >= 3);
+  if (lines[3]) lines[3].classList.toggle('done', n >= 3);
+}
+
 function _goToScreen(n) {
   if (n === currentScreen) return;
   const dir = n > currentScreen ? 1 : -1; // 1 = forward, -1 = back
@@ -3065,6 +3172,7 @@ function _goToScreen(n) {
   currentScreen = n;
   const sub = document.getElementById('header-subtitle');
   if (sub) sub.textContent = SCREENS[n-1].title;
+  updateStepper(n);
   if (n === 3 && typeof sigCanvas !== 'undefined' && sigCanvas) {
     setTimeout(() => {
       sigCanvas.width = sigCanvas.offsetWidth;
@@ -3607,6 +3715,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSig();
   initProtocolo();
   initHeaderLogo();
+  updateStepper(1);
   goToScreen(1);
 
   // Oculta o botão "Instalar app" do menu se já estiver rodando como PWA
