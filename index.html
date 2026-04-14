@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AvariApp">
-<link rel="manifest" href="/avariapp/manifest.json">
+<link rel="manifest" href="/avariapp/manifest.json?v=110">
 <link rel="apple-touch-icon" href="/avariapp/icon.png">
 <title>AvariApp</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -16,10 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-  :root {
-    --bg-page: #0D1117; --bg-card: #161B22; --text: #E6EDF3; --text-muted: #7D8590;
-    --radius-lg: 16px;
-  }
+  :root { --bg-page: #0D1117; --text: #E6EDF3; --text-muted: #7D8590; --radius-lg: 16px; }
   body { font-family: 'Inter', sans-serif; background: var(--bg-page); color: var(--text); padding: 16px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
   .app { max-width: 560px; margin: 0 auto; flex: 1; width: 100%; }
   
@@ -33,9 +30,9 @@
   .install-card-body { flex: 1; }
   .install-card-body strong { display: block; font-size: 14px; }
   .install-card-body span { font-size: 11px; color: var(--text-muted); }
-  .install-card-btn { padding: 8px 16px; background: #E36B1A; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .install-card-btn { padding: 8px 12px; background: #E36B1A; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
-  footer { text-align: center; padding: 20px; font-size: 10px; color: var(--text-muted); }
+  footer { text-align: center; padding: 30px; font-size: 12px; color: #7EE787; border-top: 1px solid #30363D; margin-top: 20px; }
 </style>
 </head>
 <body>
@@ -44,9 +41,9 @@
     <div class="install-card-icon"><img src="/avariapp/icon.png" alt="AvariApp"></div>
     <div class="install-card-body">
       <strong>Instalar AvariApp</strong>
-      <span>Toque para usar como aplicativo</span>
+      <span>Clique para usar como App</span>
     </div>
-    <button class="install-card-btn" onclick="executarInstalacao()">Instalar</button>
+    <button class="install-card-btn" onclick="executarInstalacao()">INSTALAR</button>
   </div>
 
   <h1>AvariApp</h1>
@@ -54,23 +51,27 @@
   </div>
 
 <footer>
-  AvariApp v1.0.6 | Lactalis do Brasil
+  <strong>VERSÃO ATUALIZADA: v1.1.0</strong><br>
+  Lactalis do Brasil - Logística
 </footer>
 
 <script>
   let promptInstalacao;
   const banner = document.getElementById('install-card');
 
-  // Verifica se está no modo standalone (instalado)
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-  if (!isStandalone) {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      promptInstalacao = e;
-      banner.style.display = 'flex';
-    });
+  // REGRA DE OURO: Se estiver no app, esconde o banner AGORA
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    banner.style.display = 'none';
   }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    promptInstalacao = e;
+    // Só mostra se não estiver instalado
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      banner.style.display = 'flex';
+    }
+  });
 
   async function executarInstalacao() {
     if (promptInstalacao) {
@@ -81,22 +82,17 @@
     }
   }
 
-  window.addEventListener('appinstalled', () => {
-    banner.style.display = 'none';
-  });
-
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/avariapp/sw.js?v=6')
-      .then(reg => {
-        reg.onupdatefound = () => {
-          const installingWorker = reg.installing;
-          installingWorker.onstatechange = () => {
-            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              window.location.reload(); // Recarrega se houver versão nova
-            }
-          };
+    navigator.serviceWorker.register('/avariapp/sw.js?v=110').then(reg => {
+      reg.onupdatefound = () => {
+        const sw = reg.installing;
+        sw.onstatechange = () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            window.location.reload(); 
+          }
         };
-      });
+      };
+    });
   }
 </script>
 </body>
