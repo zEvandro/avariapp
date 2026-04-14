@@ -1138,6 +1138,11 @@
 
     <div class="menu-divider"></div>
 
+    <button class="menu-item" id="menu-install-btn" onclick="closeSideMenu(); dismissInstallBanner(); setTimeout(showInstallBanner, 50)">
+      <div class="menu-item-icon" style="background:#0D2818">📲</div>
+      <div class="menu-item-info"><strong>Instalar app</strong><span>Adicionar à tela inicial</span></div>
+    </button>
+
     <button class="menu-item" id="theme-toggle-btn" onclick="toggleTheme()">
       <div class="menu-item-icon" style="background:#1A1A2E" id="theme-toggle-icon">☀️</div>
       <div class="menu-item-info"><strong id="theme-toggle-label">Modo Claro</strong><span id="theme-toggle-sub">Mudar para tema claro</span></div>
@@ -3323,35 +3328,54 @@ function renderCNList() {
 // ── PWA ──
 let deferredInstallPrompt = null;
 
-// Detecta se já está instalado como PWA (standalone)
+// Verifica se já está rodando como PWA instalada (modo standalone)
 function isPWAInstalled() {
   return window.matchMedia('(display-mode: standalone)').matches
       || window.navigator.standalone === true;
 }
 
-// Detecta Safari no iOS (não suporta beforeinstallprompt)
+// Detecta Safari no iOS (único que não suporta beforeinstallprompt)
 function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent)
-      && !window.MSStream;
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+// Verifica se o usuário dispensou o banner recentemente (7 dias)
+function bannerDismissedRecently() {
+  try {
+    const ts = parseInt(localStorage.getItem('pwa_dismissed') || '0');
+    return Date.now() - ts < 7 * 24 * 60 * 60 * 1000;
+  } catch(e) { return false; }
 }
 
 function showInstallBanner() {
-  // Não mostrar se já instalado
+  // Nunca mostrar se já está instalado
   if (isPWAInstalled()) return;
-  // Não mostrar se usuário dispensou nos últimos 7 dias
-  try {
-    const dismissed = parseInt(localStorage.getItem('pwa_dismissed') || '0');
-    if (Date.now() - dismissed < 7 * 24 * 60 * 60 * 1000) return;
-  } catch(e) {}
+  // Não mostrar se dispensado recentemente
+  if (bannerDismissedRecently()) return;
 
   if (isIOS()) {
-    // iOS: mostra instruções manuais (Safari não tem beforeinstallprompt)
+    // iOS Safari: instruções manuais (Safari não suporta beforeinstallprompt)
     const b = document.getElementById('ios-banner');
     if (b) b.style.display = 'flex';
   } else if (deferredInstallPrompt) {
-    // Android/Chrome: mostra botão de instalação nativo
+    // Android/Chrome com critérios PWA atendidos: botão de instalação nativa
     const b = document.getElementById('pwa-banner');
     if (b) b.style.display = 'flex';
+  } else {
+    // Qualquer outro browser/situação: mostra instruções genéricas via ios-banner
+    // (mesma UI, instruções adaptadas para Android/outros)
+    const b = document.getElementById('ios-banner');
+    if (b) {
+      // Adapta o texto para Android / outros browsers
+      const steps = b.querySelector('.ios-banner-steps');
+      if (steps) {
+        steps.innerHTML =
+          '1. Toque no menu do navegador <strong>(⋮ ou ☰)</strong><br>' +
+          '2. Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar app"</strong><br>' +
+          '3. Confirme tocando em <strong>Adicionar</strong>';
+      }
+      b.style.display = 'flex';
+    }
   }
 }
 
@@ -3364,7 +3388,11 @@ function dismissInstallBanner() {
 }
 
 function installPWA() {
-  if (!deferredInstallPrompt) return;
+  if (!deferredInstallPrompt) {
+    // Se não há prompt nativo, mostra as instruções manuais
+    showInstallBanner();
+    return;
+  }
   deferredInstallPrompt.prompt();
   deferredInstallPrompt.userChoice.then(choice => {
     deferredInstallPrompt = null;
@@ -3389,12 +3417,10 @@ function setupPWA() {
   window.addEventListener('online',  updateNetDot);
   window.addEventListener('offline', updateNetDot);
 
-  // Captura o evento de instalação ANTES de mostrar o banner
+  // Captura o evento nativo do Chrome/Android antes de ele mostrar o mini-infobar
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); // impede o mini-infobar automático do Chrome
+    e.preventDefault(); // impede o mini-infobar automático
     deferredInstallPrompt = e;
-    // Mostra o banner após 3s para não interromper o carregamento
-    setTimeout(showInstallBanner, 3000);
   });
 
   window.addEventListener('appinstalled', () => {
@@ -3403,8 +3429,8 @@ function setupPWA() {
     showToast('AvariApp instalado!', 'success');
   });
 
-  // iOS: mostra banner após 3s (não tem evento beforeinstallprompt)
-  if (isIOS() && !isPWAInstalled()) {
+  // Mostra o banner após 3s em QUALQUER plataforma (se não instalado e não dispensado)
+  if (!isPWAInstalled()) {
     setTimeout(showInstallBanner, 3000);
   }
 
@@ -3436,6 +3462,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initProtocolo();
   initHeaderLogo();
   goToScreen(1);
+
+  // Oculta o botão "Instalar app" do menu se já estiver rodando como PWA
+  if (isPWAInstalled()) {
+    const btn = document.getElementById('menu-install-btn');
+    if (btn) btn.style.display = 'none';
+  }
 
   // Preenche data de hoje automaticamente (se vazia)
   const dataEl = document.getElementById('data');
