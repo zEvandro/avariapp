@@ -737,6 +737,7 @@
       <h1>AvariApp <span id="header-version" style="font-size:10px;font-weight:400;color:var(--text-muted);letter-spacing:.02em"></span></h1>
       <p id="header-subtitle">Lactalis Brasil</p>
     </div>
+    <span id="net-dot" title="Status de conexão" style="width:8px;height:8px;border-radius:50%;background:var(--green-border);flex-shrink:0;margin-left:auto"></span>
   </div>
 
   <!-- ═══ TELA 1: IDENTIFICAÇÃO ═══ -->
@@ -889,6 +890,23 @@
   <div id="qr-canvas" style="display:none;position:absolute;left:-9999px"></div>
 </div>
 
+<!-- Modal Histórico de Registros -->
+<div id="hist-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharHistorico()">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2>📋 Histórico de Registros</h2>
+      <button class="modal-close" onclick="fecharHistorico()">×</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div id="hist-list" style="max-height:360px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button onclick="limparHistorico()" style="flex:1;padding:11px;background:transparent;border:1px solid var(--red-border);color:var(--red-text);border-radius:var(--radius-md);font-size:13px;cursor:pointer;font-family:inherit">🗑 Limpar</button>
+      <button onclick="fecharHistorico()" style="flex:2;padding:11px;background:var(--bg-item);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:14px;cursor:pointer;font-family:inherit">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Gerenciar Naturezas e Causas -->
 <div id="cn-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeCNManager()">
   <div class="modal-sheet">
@@ -989,6 +1007,11 @@
 
     <div class="menu-divider"></div>
     <p class="menu-section-label">Gerenciar</p>
+
+    <button class="menu-item" onclick="closeSideMenu(); abrirHistorico()">
+      <div class="menu-item-icon" style="background:#1A1A2E">🕐</div>
+      <div class="menu-item-info"><strong>Histórico</strong><span>Últimos registros gerados</span></div>
+    </button>
 
     <button class="menu-item" onclick="closeSideMenu(); openProdManager()">
       <div class="menu-item-icon" style="background:#1A1A2E">🏷️</div>
@@ -1237,9 +1260,10 @@ function renderItem(it) {
         <div class="section-label">Causa da avaria</div>
         <div class="tag-group">${tagGroup(d.causas,it.id,'causa','sel-cau')}</div>
       </div>` : ''}
-      <div style="margin-top:12px;display:flex;gap:8px">
-        <button style="flex:1;padding:9px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:12px;cursor:pointer;font-family:inherit" onclick="duplicateItem(${it.id})">⎘ Duplicar</button>
-        <button style="flex:1;padding:9px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);border-radius:var(--radius-md);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" onclick="collapseItem(${it.id})">✓ Concluir</button>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <button style="flex:1;min-width:80px;padding:9px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:11px;cursor:pointer;font-family:inherit" onclick="duplicateItem(${it.id})" title="Copia tudo, inclusive o código do produto">⎘ Duplicar</button>
+        <button style="flex:1;min-width:80px;padding:9px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:11px;cursor:pointer;font-family:inherit" onclick="duplicateItemSemCod(${it.id})" title="Copia tipo/natureza/causa — produto em branco">⎘ Novo produto</button>
+        <button style="flex:1;min-width:80px;padding:9px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);border-radius:var(--radius-md);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" onclick="collapseItem(${it.id})">✓ Concluir</button>
       </div>
     </div>
   `;
@@ -1548,6 +1572,26 @@ function duplicateItem(id) {
   recalcCaixas(); saveDraft();
 }
 
+// Duplica só o tipo/natureza/causa — produto em branco para digitar novo código
+function duplicateItemSemCod(id) {
+  const orig = items.find(x => x.id === id); if (!orig) return;
+  const copy = {
+    id: ++idCnt,
+    cod: '', desc: '', fabr: '', val: '', qtd: orig.qtd || '', unid: orig.unid || '',
+    tipo: orig.tipo, natureza: orig.natureza, causa: orig.causa,
+    photos: [],
+  };
+  items.push(copy);
+  const div = document.createElement('div');
+  div.className = 'item-card'; div.id = 'item-' + copy.id;
+  div.dataset.open = 'true';
+  document.getElementById('items-list').appendChild(div);
+  renderItem(copy);
+  div.scrollIntoView({behavior:'smooth', block:'start'});
+  setTimeout(() => document.getElementById('cod-' + copy.id)?.focus(), 100);
+  recalcCaixas(); saveDraft();
+}
+
 // ── PHOTOS ──
 function renderPhotos(id, photos) {
   const el = document.getElementById('photos-' + id); if (!el) return;
@@ -1692,6 +1736,116 @@ function saveDraft() {
     showToast('Aviso: nao foi possivel salvar rascunho. Armazenamento cheio!', 'error');
     console.warn('[Draft] localStorage cheio:', e);
   }
+}
+
+// ── LEMBRAR ÚLTIMO OPERADOR ──
+// Salva nome, matrícula, supervisor e câmara para pré-preencher no próximo registro
+function saveLastOperator() {
+  try {
+    const data = {
+      operador:   document.getElementById('operador')?.value   || '',
+      matricula:  document.getElementById('matricula')?.value  || '',
+      supervisor: document.getElementById('supervisor')?.value || '',
+      camara:     document.getElementById('camara')?.value     || '',
+    };
+    if (data.operador) localStorage.setItem('avariapp_last_op', JSON.stringify(data));
+  } catch(e) { console.warn('[saveLastOperator]', e); }
+}
+
+function loadLastOperator() {
+  try {
+    const raw = localStorage.getItem('avariapp_last_op');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const opEl  = document.getElementById('operador');
+    const matEl = document.getElementById('matricula');
+    const supEl = document.getElementById('supervisor');
+    const camEl = document.getElementById('camara');
+    if (opEl  && !opEl.value  && data.operador)   opEl.value   = data.operador;
+    if (matEl && !matEl.value && data.matricula)   matEl.value  = data.matricula;
+    if (supEl && !supEl.value && data.supervisor)  supEl.value  = data.supervisor;
+    if (camEl && !camEl.value && data.camara) {
+      camEl.value = data.camara;
+      onCamaraChange(data.camara);
+    }
+    if (data.operador) showToast('Operador anterior pré-preenchido — confirme os dados.', 'success');
+  } catch(e) { console.warn('[loadLastOperator]', e); }
+}
+
+// ── HISTÓRICO DE REGISTROS ──
+// Guarda os últimos 10 registros gerados (só metadados — sem fotos)
+const HIST_KEY  = 'avariapp_historico';
+const HIST_MAX  = 10;
+
+function salvarNoHistorico() {
+  try {
+    const hist = carregarHistorico();
+    const entry = {
+      protocolo: protocoloAtual || '—',
+      camara:    document.getElementById('camara')?.value    || '—',
+      operador:  document.getElementById('operador')?.value  || '—',
+      data:      document.getElementById('data')?.value      || '—',
+      turno:     document.getElementById('turno')?.value     || '—',
+      nitens:    items.length,
+      cx:        parseInt(document.getElementById('tot-caixas')?.value  || '0'),
+      un:        parseInt(document.getElementById('tot-unidades')?.value || '0'),
+      geradoEm:  new Date().toISOString(),
+    };
+    hist.unshift(entry);
+    if (hist.length > HIST_MAX) hist.length = HIST_MAX;
+    localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  } catch(e) { console.warn('[salvarNoHistorico]', e); }
+}
+
+function carregarHistorico() {
+  try {
+    const raw = localStorage.getItem(HIST_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function abrirHistorico() {
+  const modal = document.getElementById('hist-modal');
+  if (modal) { renderHistorico(); modal.style.display = 'flex'; }
+}
+
+function fecharHistorico() {
+  const modal = document.getElementById('hist-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderHistorico() {
+  const list = document.getElementById('hist-list');
+  if (!list) return;
+  const hist = carregarHistorico();
+  if (!hist.length) {
+    list.innerHTML = `<p style="text-align:center;font-size:13px;color:var(--text-muted);padding:24px 0">Nenhum registro ainda.<br>Gere o primeiro PDF para começar.</p>`;
+    return;
+  }
+  list.innerHTML = hist.map((e, i) => {
+    const dt = new Date(e.geradoEm);
+    const dtStr = isNaN(dt) ? '—' : dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    return `
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);${i===0?'background:var(--accent-dim);':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:var(--blue-text)">${escHtml(e.protocolo)}</span>
+          <span style="font-size:10px;color:var(--text-muted)">${dtStr}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:3px">${escHtml(e.camara)} · ${escHtml(e.operador)} · ${escHtml(e.turno)}</div>
+        <div style="display:flex;gap:10px;font-size:11px;color:var(--text-muted)">
+          <span>${e.nitens} item${e.nitens!==1?'s':''}</span>
+          ${e.cx ? `<span>${e.cx} CX</span>` : ''}
+          ${e.un ? `<span>${e.un} UN</span>` : ''}
+          <span style="color:var(--text-muted)">${escHtml(e.data)}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function limparHistorico() {
+  try { localStorage.removeItem(HIST_KEY); } catch(e) {}
+  renderHistorico();
+  showToast('Histórico apagado.', 'success');
 }
 
 function loadDraft() {
@@ -2213,6 +2367,8 @@ function gerarPDF(skipValidation = false) {
   a.download = `avaria_picking_${new Date().toISOString().slice(0, 10)}.pdf`;
   a.click();
   URL.revokeObjectURL(url);
+  saveLastOperator();
+  salvarNoHistorico();
 }
 
 // ── GERENCIADOR DE PRODUTOS ──
@@ -3055,18 +3211,27 @@ function renderCNList() {
 let deferredInstallPrompt = null;
 
 function setupPWA() {
-  // Deixa o Chrome mostrar o prompt nativo de instalação
+  // Indicador de rede (ponto verde/vermelho no header)
+  function updateNetDot() {
+    const dot = document.getElementById('net-dot');
+    if (!dot) return;
+    const online = navigator.onLine;
+    dot.style.background = online ? 'var(--green-border)' : 'var(--red-border)';
+    dot.title = online ? 'Online' : 'Offline — app funciona normalmente';
+  }
+  updateNetDot();
+  window.addEventListener('online',  updateNetDot);
+  window.addEventListener('offline', updateNetDot);
+
   window.addEventListener('beforeinstallprompt', e => {
     deferredInstallPrompt = e;
-    // NÃO cancela o evento — Chrome mostra o banner nativo automaticamente
   });
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
-    showToast('✓ AvariApp instalado!', 'success');
+    showToast('AvariApp instalado!', 'success');
   });
 
-  // Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/avariapp/sw.js', { scope: '/avariapp/' })
       .then(() => console.log('SW registrado'))
@@ -3147,6 +3312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { console.warn('[DOMContentLoaded] loadDraft:', e); }
   }
   addItem();
+  loadLastOperator();
   setTimeout(buildQRCode, 300);
 });
 </script>
