@@ -232,83 +232,97 @@
   .screens-wrapper   { position: relative; overflow: hidden; }
 
   /* ── Banner de instalação PWA ── */
-  .install-banner {
-    display: flex; align-items: center; gap: 12px;
-    background: linear-gradient(135deg, #1B2A4A 0%, #0F1C35 100%);
+  /* ══════════════════════════════════════
+     CARD DE INSTALAÇÃO — estilo da imagem
+     ══════════════════════════════════════ */
+  .install-card {
+    display: flex; align-items: center; gap: 14px;
+    background: #1B2A4A;
     border: 1px solid #1E3A6E;
     border-radius: var(--radius-lg);
-    padding: 14px 16px;
+    padding: 13px 16px;
     margin-bottom: 14px;
-    animation: slide-in-banner .35s cubic-bezier(.4,0,.2,1);
+    animation: install-in .3s cubic-bezier(.4,0,.2,1);
   }
-  @keyframes slide-in-banner {
-    from { opacity: 0; transform: translateY(-12px); }
-    to   { opacity: 1; transform: translateY(0); }
+  @keyframes install-in {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
   }
-  .install-banner-icon {
-    width: 44px; height: 44px; border-radius: 12px;
-    background: #fff; flex-shrink: 0;
+  .install-card-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: #fff; flex-shrink: 0; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
   }
-  .install-banner-icon img { width: 38px; height: 38px; display: block; }
-  .install-banner-body { flex: 1; min-width: 0; }
-  .install-banner-body strong {
-    display: block; font-size: 13px; font-weight: 700; color: #E6EDF3;
+  .install-card-icon img { width: 40px; height: 40px; display: block; }
+  .install-card-body { flex: 1; min-width: 0; }
+  .install-card-body strong {
+    display: block; font-size: 14px; font-weight: 700;
+    color: #E6EDF3; line-height: 1.3;
   }
-  .install-banner-body span {
-    display: block; font-size: 11px; color: #7D8590; margin-top: 2px; line-height: 1.4;
+  .install-card-body span {
+    display: block; font-size: 12px; color: #7D8590; margin-top: 2px;
   }
-  .install-banner-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-  .install-btn-yes {
-    padding: 8px 14px; background: #2563EB; color: #fff;
+  .install-card-btn {
+    padding: 10px 18px;
+    background: #E36B1A; color: #fff;
     border: none; border-radius: var(--radius-sm);
-    font-size: 12px; font-weight: 700; font-family: inherit;
-    cursor: pointer; white-space: nowrap;
-    transition: background .15s;
+    font-size: 14px; font-weight: 700; font-family: inherit;
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    transition: background .12s, transform .1s;
   }
-  .install-btn-yes:active { background: #1A4FC4; }
-  .install-btn-no {
-    padding: 6px 14px; background: transparent;
-    border: 1px solid rgba(255,255,255,.15); color: #7D8590;
-    border-radius: var(--radius-sm); font-size: 11px;
-    font-family: inherit; cursor: pointer; white-space: nowrap;
-    transition: border-color .15s;
-  }
-  .install-btn-no:active { border-color: rgba(255,255,255,.35); }
+  .install-card-btn:active { background: #C05A10; transform: scale(.97); }
 
-  /* Banner iOS (instruções manuais) */
-  .ios-banner {
-    display: flex; flex-direction: column; gap: 8px;
-    background: linear-gradient(135deg, #1B2A4A 0%, #0F1C35 100%);
-    border: 1px solid #1E3A6E;
-    border-radius: var(--radius-lg);
-    padding: 14px 16px;
-    margin-bottom: 14px;
-    animation: slide-in-banner .35s cubic-bezier(.4,0,.2,1);
+  /* Modal de instruções (iOS / browsers sem prompt nativo) */
+  .install-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.65); z-index: 3000;
+    align-items: flex-end; justify-content: center;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .ios-banner-top { display: flex; align-items: center; gap: 10px; }
-  .ios-banner-body { flex: 1; }
-  .ios-banner-body strong { font-size: 13px; font-weight: 700; color: #E6EDF3; }
-  .ios-banner-body span  { display: block; font-size: 11px; color: #7D8590; margin-top: 2px; }
-  .ios-banner-steps { font-size: 12px; color: #79C0FF; line-height: 1.7; padding-left: 2px; }
-  .ios-banner-close {
-    background: transparent; border: none; color: #7D8590;
-    font-size: 20px; cursor: pointer; padding: 0 4px; flex-shrink: 0;
-    line-height: 1;
+  .install-modal-overlay.open { display: flex; }
+  .install-modal-sheet {
+    background: var(--bg-card); border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 560px;
+    padding: 24px 20px 32px;
+    animation: sheet-up .28s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes sheet-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .install-modal-title {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    margin-bottom: 6px;
+  }
+  .install-modal-sub {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+  }
+  .install-modal-steps { display: flex; flex-direction: column; gap: 14px; }
+  .install-step {
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .install-step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-dim); color: #79C0FF;
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .install-step-text {
+    font-size: 14px; color: var(--text); line-height: 1.5; padding-top: 3px;
+  }
+  .install-step-text em { color: #79C0FF; font-style: normal; font-weight: 600; }
+  .install-modal-close {
+    width: 100%; margin-top: 24px; padding: 13px;
+    background: var(--bg-item); border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: var(--radius-md);
+    font-size: 14px; font-family: inherit; cursor: pointer;
   }
 
-  [data-theme="light"] .install-banner,
-  [data-theme="light"] .ios-banner {
-    background: linear-gradient(135deg, #EBF2FF 0%, #DCEEFF 100%);
-    border-color: #B0CCEF;
-  }
-  [data-theme="light"] .install-banner-body strong,
-  [data-theme="light"] .ios-banner-body strong { color: #1F2328; }
-  [data-theme="light"] .install-banner-body span,
-  [data-theme="light"] .ios-banner-body span,
-  [data-theme="light"] .install-btn-no         { color: #57606A; }
-  [data-theme="light"] .install-btn-no         { border-color: #B0CCEF; }
+  [data-theme="light"] .install-card { background: #E8F0FE; border-color: #B0CCEF; }
+  [data-theme="light"] .install-card-body strong { color: #1F2328; }
+  [data-theme="light"] .install-card-body span   { color: #57606A; }
+
   .live-totals-bar {
     display: flex; align-items: center; gap: 8px;
     background: var(--bg-card);
@@ -850,36 +864,25 @@
   </div>
 
   <!-- Banner de instalação — Android/Chrome (controle via JS) -->
-  <div id="pwa-banner" class="install-banner" style="display:none">
-    <div class="install-banner-icon">
-      <img src="/avariapp/icon.png" alt="AvariApp" onerror="this.style.display='none'">
+  <!-- Card de instalação — aparece automaticamente, estilo imagem -->
+  <div id="install-card" class="install-card" style="display:none">
+    <div class="install-card-icon">
+      <img src="/avariapp/icon.png" alt="AvariApp" onerror="this.parentNode.innerHTML='📦'">
     </div>
-    <div class="install-banner-body">
+    <div class="install-card-body">
       <strong>Instalar AvariApp</strong>
-      <span>Acesso rápido na tela inicial, funciona offline</span>
+      <span>Acesso rápido, funciona offline</span>
     </div>
-    <div class="install-banner-actions">
-      <button class="install-btn-yes" onclick="installPWA()">Instalar</button>
-      <button class="install-btn-no"  onclick="dismissInstallBanner()">Agora não</button>
-    </div>
+    <button class="install-card-btn" onclick="onInstallClick()">Instalar</button>
   </div>
 
-  <!-- Banner de instalação — iOS/Safari (instruções manuais) -->
-  <div id="ios-banner" class="ios-banner" style="display:none">
-    <div class="ios-banner-top">
-      <div class="install-banner-icon">
-        <img src="/avariapp/icon.png" alt="AvariApp" onerror="this.style.display='none'">
-      </div>
-      <div class="ios-banner-body">
-        <strong>Instalar no iPhone / iPad</strong>
-        <span>Para usar sem internet e com acesso rápido:</span>
-      </div>
-      <button class="ios-banner-close" onclick="dismissInstallBanner()" aria-label="Fechar">×</button>
-    </div>
-    <div class="ios-banner-steps">
-      1. Toque em <strong>Compartilhar</strong> (ícone □↑ na barra do Safari)<br>
-      2. Role e toque em <strong>"Adicionar à Tela de Início"</strong><br>
-      3. Confirme tocando em <strong>Adicionar</strong>
+  <!-- Modal de instruções (iOS e outros sem prompt nativo) -->
+  <div id="install-modal" class="install-modal-overlay" onclick="if(event.target===this)fecharModalInstalacao()">
+    <div class="install-modal-sheet">
+      <div id="install-modal-title" class="install-modal-title">Como instalar o AvariApp</div>
+      <div id="install-modal-sub" class="install-modal-sub">Siga os passos abaixo no seu dispositivo</div>
+      <div id="install-modal-steps" class="install-modal-steps"></div>
+      <button class="install-modal-close" onclick="fecharModalInstalacao()">Fechar</button>
     </div>
   </div>
 
@@ -1168,7 +1171,7 @@
 
     <div class="menu-divider"></div>
 
-    <button class="menu-item" id="menu-install-btn" onclick="closeSideMenu(); dismissInstallBanner(); setTimeout(showInstallBanner, 50)">
+    <button class="menu-item" id="menu-install-btn" onclick="closeSideMenu(); setTimeout(onInstallClick, 80)">
       <div class="menu-item-icon" style="background:#0D2818">📲</div>
       <div class="menu-item-info"><strong>Instalar app</strong><span>Adicionar à tela inicial</span></div>
     </button>
@@ -1249,7 +1252,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.3.0';
 
 const DATA = {
   P: {
@@ -3365,18 +3368,13 @@ function renderCNList() {
 // ── PWA ──
 let deferredInstallPrompt = null;
 
-// Verifica se já está rodando como PWA instalada (modo standalone)
 function isPWAInstalled() {
   return window.matchMedia('(display-mode: standalone)').matches
       || window.navigator.standalone === true;
 }
-
-// Detecta Safari no iOS (único que não suporta beforeinstallprompt)
 function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 }
-
-// Verifica se o usuário dispensou o banner recentemente (7 dias)
 function bannerDismissedRecently() {
   try {
     const ts = parseInt(localStorage.getItem('pwa_dismissed') || '0');
@@ -3384,91 +3382,108 @@ function bannerDismissedRecently() {
   } catch(e) { return false; }
 }
 
-function showInstallBanner() {
-  // Nunca mostrar se já está instalado
+// Mostra o card de instalação
+function showInstallCard() {
   if (isPWAInstalled()) return;
-  // Não mostrar se dispensado recentemente
   if (bannerDismissedRecently()) return;
-
-  if (isIOS()) {
-    // iOS Safari: instruções manuais (Safari não suporta beforeinstallprompt)
-    const b = document.getElementById('ios-banner');
-    if (b) b.style.display = 'flex';
-  } else if (deferredInstallPrompt) {
-    // Android/Chrome com critérios PWA atendidos: botão de instalação nativa
-    const b = document.getElementById('pwa-banner');
-    if (b) b.style.display = 'flex';
-  } else {
-    // Qualquer outro browser/situação: mostra instruções genéricas via ios-banner
-    // (mesma UI, instruções adaptadas para Android/outros)
-    const b = document.getElementById('ios-banner');
-    if (b) {
-      // Adapta o texto para Android / outros browsers
-      const steps = b.querySelector('.ios-banner-steps');
-      if (steps) {
-        steps.innerHTML =
-          '1. Toque no menu do navegador <strong>(⋮ ou ☰)</strong><br>' +
-          '2. Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar app"</strong><br>' +
-          '3. Confirme tocando em <strong>Adicionar</strong>';
-      }
-      b.style.display = 'flex';
-    }
-  }
+  const card = document.getElementById('install-card');
+  if (card) card.style.display = 'flex';
 }
 
+// Esconde o card
+function hideInstallCard() {
+  const card = document.getElementById('install-card');
+  if (card) card.style.display = 'none';
+}
+
+// Dispensar por 7 dias
 function dismissInstallBanner() {
   try { localStorage.setItem('pwa_dismissed', String(Date.now())); } catch(e) {}
-  const bp = document.getElementById('pwa-banner');
-  const bi = document.getElementById('ios-banner');
-  if (bp) bp.style.display = 'none';
-  if (bi) bi.style.display = 'none';
+  hideInstallCard();
+  fecharModalInstalacao();
 }
 
-function installPWA() {
-  if (!deferredInstallPrompt) {
-    // Se não há prompt nativo, mostra as instruções manuais
-    showInstallBanner();
-    return;
+// Clique no botão "Instalar"
+function onInstallClick() {
+  if (deferredInstallPrompt) {
+    // Android/Chrome: abre o prompt nativo do sistema
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(choice => {
+      deferredInstallPrompt = null;
+      hideInstallCard();
+      if (choice.outcome === 'accepted') showToast('AvariApp instalado!', 'success');
+      else try { localStorage.setItem('pwa_dismissed', String(Date.now())); } catch(e) {}
+    });
+  } else {
+    // iOS / outros browsers: abre modal com instruções passo a passo
+    abrirModalInstalacao();
   }
-  deferredInstallPrompt.prompt();
-  deferredInstallPrompt.userChoice.then(choice => {
-    deferredInstallPrompt = null;
-    const b = document.getElementById('pwa-banner');
-    if (b) b.style.display = 'none';
-    if (choice.outcome === 'accepted') {
-      showToast('AvariApp instalado com sucesso!', 'success');
-    }
-  });
 }
+
+// Modal de instruções para iOS e outros browsers
+function abrirModalInstalacao() {
+  const modal = document.getElementById('install-modal');
+  const title = document.getElementById('install-modal-title');
+  const sub   = document.getElementById('install-modal-sub');
+  const steps = document.getElementById('install-modal-steps');
+  if (!modal || !steps) return;
+
+  if (isIOS()) {
+    if (title) title.textContent = 'Instalar no iPhone / iPad';
+    if (sub)   sub.textContent   = 'Adicione à tela inicial pelo Safari:';
+    steps.innerHTML = `
+      <div class="install-step"><div class="install-step-num">1</div><div class="install-step-text">Toque no ícone <em>Compartilhar</em> (□↑) na barra inferior do Safari</div></div>
+      <div class="install-step"><div class="install-step-num">2</div><div class="install-step-text">Role a lista e toque em <em>"Adicionar à Tela de Início"</em></div></div>
+      <div class="install-step"><div class="install-step-num">3</div><div class="install-step-text">Toque em <em>Adicionar</em> para confirmar</div></div>
+    `;
+  } else {
+    if (title) title.textContent = 'Instalar no Android / PC';
+    if (sub)   sub.textContent   = 'Adicione à tela inicial pelo menu do navegador:';
+    steps.innerHTML = `
+      <div class="install-step"><div class="install-step-num">1</div><div class="install-step-text">Toque no menu do navegador <em>(⋮ ou ☰)</em> no canto superior direito</div></div>
+      <div class="install-step"><div class="install-step-num">2</div><div class="install-step-text">Toque em <em>"Adicionar à tela inicial"</em> ou <em>"Instalar app"</em></div></div>
+      <div class="install-step"><div class="install-step-num">3</div><div class="install-step-text">Confirme tocando em <em>Adicionar</em></div></div>
+    `;
+  }
+  modal.classList.add('open');
+}
+
+function fecharModalInstalacao() {
+  const modal = document.getElementById('install-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+// Também mantém compatibilidade com funções antigas referenciadas em outro lugar
+function showInstallBanner() { showInstallCard(); }
+function installPWA() { onInstallClick(); }
 
 function setupPWA() {
-  // Indicador de rede (ponto verde/vermelho no header)
+  // Indicador de rede
   function updateNetDot() {
     const dot = document.getElementById('net-dot');
     if (!dot) return;
-    const online = navigator.onLine;
-    dot.style.background = online ? 'var(--green-border)' : 'var(--red-border)';
-    dot.title = online ? 'Online' : 'Offline — app funciona normalmente';
+    dot.style.background = navigator.onLine ? 'var(--green-border)' : 'var(--red-border)';
+    dot.title = navigator.onLine ? 'Online' : 'Offline — app funciona normalmente';
   }
   updateNetDot();
   window.addEventListener('online',  updateNetDot);
   window.addEventListener('offline', updateNetDot);
 
-  // Captura o evento nativo do Chrome/Android antes de ele mostrar o mini-infobar
+  // Captura o prompt nativo do Chrome/Android
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); // impede o mini-infobar automático
+    e.preventDefault();
     deferredInstallPrompt = e;
   });
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
-    dismissInstallBanner();
+    hideInstallCard();
     showToast('AvariApp instalado!', 'success');
   });
 
-  // Mostra o banner após 3s em QUALQUER plataforma (se não instalado e não dispensado)
+  // Mostra o card após 2s se não instalado
   if (!isPWAInstalled()) {
-    setTimeout(showInstallBanner, 3000);
+    setTimeout(showInstallCard, 2000);
   }
 
   if ('serviceWorker' in navigator) {
