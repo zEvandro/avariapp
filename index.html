@@ -445,59 +445,98 @@
   .tag.sel-cau { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-border); }
 
   /* ── Item card ── */
+  /* ══════════════════════════════════════
+     CARD DE ITEM — design espaçoso
+     ══════════════════════════════════════ */
   .item-card {
-    background: var(--bg-item);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 0;
-    margin-bottom: 8px;
-    position: relative;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 14px;
     overflow: hidden;
+    transition: border-color .15s;
   }
+  .item-card:has(.item-header:hover) { border-color: var(--border-focus); }
+
+  /* ── Cabeçalho do card ── */
   .item-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 14px;
-    cursor: pointer;
-    user-select: none;
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 12px;
+    cursor: pointer; user-select: none;
+    background: var(--bg-item);
   }
-  .item-header:hover { background: rgba(255,255,255,.03); }
+  .item-header:hover { background: var(--bg-item); }
+
+  /* Número do item — círculo grande */
   .item-badge {
-    font-size: 10px; font-weight: 700;
+    width: 32px; height: 32px;
+    border-radius: 50%;
     background: var(--accent-dim); color: #79C0FF;
-    border-radius: 20px; padding: 2px 8px;
-    flex-shrink: 0;
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; letter-spacing: -.01em;
   }
-  .item-summary {
-    flex: 1; min-width: 0;
-  }
+
+  /* Bloco de texto central */
+  .item-summary { flex: 1; min-width: 0; }
   .item-summary-code {
-    font-size: 12px; font-weight: 600; color: var(--text);
+    font-size: 14px; font-weight: 700; color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 5px;
   }
   .item-summary-tags {
-    display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap;
+    display: flex; gap: 5px; flex-wrap: wrap;
   }
   .item-summary-tag {
-    font-size: 10px; padding: 1px 7px; border-radius: 20px;
+    font-size: 11px; padding: 2px 9px; border-radius: 20px;
     border: 1px solid var(--border); color: var(--text-muted);
     background: var(--bg-card);
   }
   .item-summary-tag.p { border-color: var(--pink-border); color: var(--pink-text); background: var(--pink-bg); }
   .item-summary-tag.f { border-color: var(--blue-border); color: var(--blue-text); background: var(--blue-bg); }
   .item-summary-tag.n { border-color: var(--green-border); color: var(--green-text); background: var(--green-bg); }
+
+  /* Chevron */
   .item-chevron {
-    font-size: 11px; color: var(--text-muted);
+    font-size: 12px; color: var(--text-muted);
     transition: transform .2s; flex-shrink: 0;
   }
   .item-chevron.open { transform: rotate(180deg); }
-  .item-body {
-    padding: 0 14px 14px;
+
+  /* ── Botão deletar — vermelho, sempre visível ── */
+  .item-del-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    background: var(--red-bg);
+    border: 1.5px solid var(--red-border);
+    color: var(--red-text);
+    font-size: 18px; line-height: 1;
+    cursor: pointer; flex-shrink: 0;
+    transition: background .12s, transform .1s;
+  }
+  .item-del-btn:active { transform: scale(.93); }
+
+  /* ── Barra de status embaixo do header ── */
+  .item-status-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px;
     border-top: 1px solid var(--border);
+    background: var(--bg-item);
+    font-size: 11px;
+  }
+  .item-status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .item-status-label { color: var(--text-muted); flex: 1; }
+
+  /* ── Corpo do card (campos) ── */
+  .item-body {
+    padding: 16px 16px 14px;
+    border-top: 1.5px solid var(--border);
+    background: var(--bg-card);
   }
   .item-body.collapsed { display: none; }
-  .item-num { display: none; } /* replaced by item-badge */
+  .item-num { display: none; }
 
   /* ── Badge de produto repetido (persistente) ── */
   .dup-badge {
@@ -559,15 +598,6 @@
   }
   .chip-p { background: var(--pink-bg); color: var(--pink-text); border: 1px solid var(--pink-border); }
   .chip-f { background: var(--blue-bg); color: var(--blue-text); border: 1px solid var(--blue-border); }
-
-  .remove-btn {
-    width: 26px; height: 26px; border-radius: 50%;
-    border: 1px solid var(--border); background: var(--bg-card);
-    color: var(--text-muted); font-size: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    line-height: 1; transition: all .12s; flex-shrink: 0;
-  }
-  .remove-btn:hover { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
 
   /* ── Tipo escolha ── */
   .tipo-escolha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
@@ -1309,36 +1339,39 @@ function renderItem(it) {
 
   el.style.cssText = '';
 
-  const natObj = it.natureza ? DATA[it.tipo]?.naturezas.find(n => n.c === it.natureza) : null;
-  const tipoTag = it.tipo === 'P'
-    ? `<span class="item-summary-tag p">Picking</span>`
-    : it.tipo === 'F'
-    ? `<span class="item-summary-tag f">Fábrica</span>` : '';
-  const natTag = natObj ? `<span class="item-summary-tag n">${natObj.l}</span>` : '';
+  // Status: completo / incompleto
   const incomplete = !it.cod || !it.tipo || !it.natureza;
-  const dot = incomplete
-    ? `<span style="width:7px;height:7px;border-radius:50%;background:var(--amber-border);flex-shrink:0;display:inline-block"></span>`
-    : `<span style="width:7px;height:7px;border-radius:50%;background:var(--green-border);flex-shrink:0;display:inline-block"></span>`;
+  const statusColor = incomplete ? 'var(--amber-border)' : 'var(--green-border)';
+  const statusText  = incomplete
+    ? (it.cod ? 'Preencha tipo e natureza' : 'Código do produto não informado')
+    : `${it.cod} · ${it.qtd || '?'} ${it.unid || ''} · ${it.tipo === 'P' ? 'Picking' : 'Fábrica'}`;
 
-  // Badge de produto repetido: aparece se outro item já usa o mesmo código
+  // Badge de produto repetido
   const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
   const dupBadge = isDup ? `<span class="dup-badge">⚠ repetido</span>` : '';
 
   el.innerHTML = `
     <div class="item-header" onclick="toggleItem(${it.id})">
-      ${dot}
       <span class="item-badge">${idx}</span>
       <div class="item-summary">
-        <div class="item-summary-code">${it.cod||'—'} · ${it.desc||'Sem descrição'}</div>
-        <div class="item-summary-tags">${tipoTag}${natTag}${it.qtd?`<span class="item-summary-tag">${it.qtd} ${it.unid||''}</span>`:''}</div>
+        <div class="item-summary-code">${it.cod || 'Novo item — toque para preencher'}</div>
+        <div class="item-summary-tags">
+          ${tipoTag}${natTag}
+          ${it.qtd ? `<span class="item-summary-tag">${it.qtd} ${it.unid||''}</span>` : ''}
+          ${dupBadge}
+        </div>
       </div>
-      ${dupBadge}
-      <button class="remove-btn" onclick="event.stopPropagation();removeItem(${it.id})">×</button>
-      <span class="item-chevron ${isOpen?'open':''}">▼</span>
+      <span class="item-chevron ${isOpen ? 'open' : ''}">▼</span>
     </div>
-    <div class="item-body ${isOpen?'':'collapsed'}">
-      <div style="height:12px"></div>
-      <div class="row2">
+
+    <div class="item-status-bar">
+      <span class="item-status-dot" style="background:${statusColor}"></span>
+      <span class="item-status-label">${it.desc || statusText}</span>
+      <button class="item-del-btn" onclick="removeItem(${it.id})" title="Remover item">🗑</button>
+    </div>
+
+    <div class="item-body ${isOpen ? '' : 'collapsed'}">
+      <div class="row2" style="margin-bottom:0">
         <div class="field">
           <label>Cód. Produto <span class="req">*</span></label>
           <div class="autocomplete-wrap">
@@ -1348,7 +1381,7 @@ function renderItem(it) {
             <div id="ac-list-${it.id}" class="autocomplete-list" style="display:none"></div>
           </div>
         </div>
-        <div class="field"><label>Descrição</label><input id="desc-${it.id}" type="text" placeholder="Nome" value="${it.desc||''}" oninput="setF(${it.id},'desc',this.value)"></div>
+        <div class="field"><label>Descrição</label><input id="desc-${it.id}" type="text" placeholder="Nome do produto" value="${it.desc||''}" oninput="setF(${it.id},'desc',this.value)"></div>
       </div>
       <div class="row3">
         <div class="field"><label>Fabricação</label><input type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" value="${fmtDate(it.fabr||'')}" oninput="maskDate(this); setF(${it.id},'fabr',parseDateInput(this.value))"></div>
@@ -1378,10 +1411,10 @@ function renderItem(it) {
         <div class="section-label">Causa da avaria</div>
         <div class="tag-group">${tagGroup(d.causas,it.id,'causa','sel-cau')}</div>
       </div>` : ''}
-      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
-        <button style="flex:1;min-width:80px;padding:9px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:11px;cursor:pointer;font-family:inherit" onclick="duplicateItem(${it.id})" title="Copia tudo, inclusive o código do produto">⎘ Duplicar</button>
-        <button style="flex:1;min-width:80px;padding:9px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:11px;cursor:pointer;font-family:inherit" onclick="duplicateItemSemCod(${it.id})" title="Copia tipo/natureza/causa — produto em branco">⎘ Novo produto</button>
-        <button style="flex:1;min-width:80px;padding:9px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);border-radius:var(--radius-md);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" onclick="collapseItem(${it.id})">✓ Concluir</button>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button style="flex:1;min-width:90px;padding:10px;background:var(--bg-item);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:12px;cursor:pointer;font-family:inherit" onclick="duplicateItem(${it.id})" title="Copia tudo, inclusive o código">⎘ Duplicar</button>
+        <button style="flex:1;min-width:90px;padding:10px;background:var(--bg-item);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-md);font-size:12px;cursor:pointer;font-family:inherit" onclick="duplicateItemSemCod(${it.id})" title="Copia tipo/natureza — produto em branco">⎘ Novo produto</button>
+        <button style="flex:1;min-width:90px;padding:10px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" onclick="collapseItem(${it.id})">✓ Concluir</button>
       </div>
     </div>
   `;
@@ -1543,50 +1576,54 @@ function updateItemHeader(id) {
     : it.tipo === 'F'
     ? `<span class="item-summary-tag f">Fábrica</span>` : '';
   const natTag = natObj ? `<span class="item-summary-tag n">${natObj.l}</span>` : '';
-  const incomplete = !it.cod || !it.tipo || !it.natureza;
-  const dotColor = incomplete ? 'var(--amber-border)' : 'var(--green-border)';
-  // update dot
-  const dot = el.querySelector('.item-header span:first-child');
-  if (dot) dot.style.background = dotColor;
-  // update code/desc
-  const codeEl = el.querySelector('.item-summary-code');
-  if (codeEl) codeEl.textContent = `${it.cod||'—'} · ${it.desc||'Sem descrição'}`;
-  // update tags
-  const tagsEl = el.querySelector('.item-summary-tags');
-  if (tagsEl) tagsEl.innerHTML = `${tipoTag}${natTag}${it.qtd?`<span class="item-summary-tag">${it.qtd} ${it.unid||''}</span>`:''}`;
-  // update badge number
+
+  // Atualiza número do badge
   const badge = el.querySelector('.item-badge');
   if (badge) badge.textContent = idx;
-  // atualizar badge de produto repetido (e re-verificar todos os itens com mesmo cod)
-  const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
-  let dupEl = el.querySelector('.dup-badge');
-  if (isDup && !dupEl) {
-    // inserir badge antes do remove-btn
-    const removeBtn = el.querySelector('.remove-btn');
-    if (removeBtn) {
-      dupEl = document.createElement('span');
-      dupEl.className = 'dup-badge';
-      dupEl.textContent = '⚠ repetido';
-      removeBtn.parentNode.insertBefore(dupEl, removeBtn);
-    }
-  } else if (!isDup && dupEl) {
-    dupEl.remove();
+
+  // Atualiza código/nome no header
+  const codeEl = el.querySelector('.item-summary-code');
+  if (codeEl) codeEl.textContent = it.cod || 'Novo item — toque para preencher';
+
+  // Atualiza tags
+  const tagsEl = el.querySelector('.item-summary-tags');
+  if (tagsEl) {
+    const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
+    const dupBadge = isDup ? `<span class="dup-badge">⚠ repetido</span>` : '';
+    tagsEl.innerHTML = `${tipoTag}${natTag}${it.qtd?`<span class="item-summary-tag">${it.qtd} ${it.unid||''}</span>`:''}${dupBadge}`;
   }
-  // atualizar outros itens com mesmo código (para remover badge quando duplicata é corrigida)
+
+  // Atualiza barra de status
+  const incomplete = !it.cod || !it.tipo || !it.natureza;
+  const statusDot   = el.querySelector('.item-status-dot');
+  const statusLabel = el.querySelector('.item-status-label');
+  if (statusDot)   statusDot.style.background = incomplete ? 'var(--amber-border)' : 'var(--green-border)';
+  if (statusLabel) statusLabel.textContent = it.desc ||
+    (incomplete
+      ? (it.cod ? 'Preencha tipo e natureza' : 'Código do produto não informado')
+      : `${it.cod} · ${it.qtd || '?'} ${it.unid || ''} · ${it.tipo === 'P' ? 'Picking' : 'Fábrica'}`);
+
+  // Atualiza badge de produto repetido (para outros itens com mesmo código)
+  const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
   items.forEach(other => {
     if (other.id !== it.id && other.cod === it.cod) {
       const otherEl = document.getElementById('item-' + other.id);
-      if (otherEl) {
-        const otherDup = otherEl.querySelector('.dup-badge');
+      if (!otherEl) return;
+      const otherTags = otherEl.querySelector('.item-summary-tags');
+      if (otherTags) {
         const stillDup = items.filter(i => i.cod === other.cod).length > 1;
-        if (!stillDup && otherDup) otherDup.remove();
-        else if (stillDup && !otherDup) {
-          const rb = otherEl.querySelector('.remove-btn');
-          if (rb) { const d = document.createElement('span'); d.className='dup-badge'; d.textContent='⚠ repetido'; rb.parentNode.insertBefore(d,rb); }
+        const existing = otherTags.querySelector('.dup-badge');
+        if (stillDup && !existing) {
+          const d = document.createElement('span');
+          d.className = 'dup-badge'; d.textContent = '⚠ repetido';
+          otherTags.appendChild(d);
+        } else if (!stillDup && existing) {
+          existing.remove();
         }
       }
     }
   });
+
   updateSummary();
 }
 
