@@ -52,6 +52,45 @@
     --radius-lg: 16px;
   }
 
+  /* ── Tema claro ── */
+  [data-theme="light"] {
+    --bg-page:    #F6F8FA;
+    --bg-card:    #FFFFFF;
+    --bg-item:    #F0F2F5;
+    --bg-input:   #FFFFFF;
+    --bg-details: #F0F2F5;
+    --border:     #D0D7DE;
+    --border-focus: #0969DA;
+    --text:       #1F2328;
+    --text-muted: #57606A;
+    --text-label: #6E7781;
+    --accent:     #0969DA;
+    --accent-dim: #DDF4FF;
+
+    --green-bg:     #DAFBE1;
+    --green-text:   #116329;
+    --green-border: #2DA44E;
+    --amber-bg:     #FFF8C5;
+    --amber-text:   #7D4E00;
+    --amber-border: #D4A72C;
+    --pink-bg:      #FFEBE9;
+    --pink-border:  #FF8182;
+    --pink-text:    #A40E26;
+    --blue-bg:      #DDF4FF;
+    --blue-text:    #0550AE;
+    --blue-border:  #54AEFF;
+    --red-bg:       #FFEBE9;
+    --red-text:     #A40E26;
+    --red-border:   #FF8182;
+  }
+
+  /* Transição suave ao trocar tema */
+  *, *::before, *::after {
+    transition: background-color .2s ease, border-color .2s ease, color .15s ease;
+  }
+  /* Excluir transição em elementos que não devem animar */
+  input, select, textarea, button, canvas { transition: none !important; }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -382,6 +421,21 @@
   }
   .item-body.collapsed { display: none; }
   .item-num { display: none; } /* replaced by item-badge */
+
+  /* ── Badge de produto repetido (persistente) ── */
+  .dup-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700;
+    background: var(--amber-bg); color: var(--amber-text);
+    border: 1px solid var(--amber-border);
+    border-radius: 20px; padding: 2px 8px;
+    flex-shrink: 0; white-space: nowrap;
+    animation: pulse-amber .9s ease-in-out infinite alternate;
+  }
+  @keyframes pulse-amber {
+    from { border-color: var(--amber-border); }
+    to   { border-color: var(--amber-text); }
+  }
 
   /* ── Summary search panel ── */
   .summary-panel {
@@ -948,6 +1002,13 @@
 
     <div class="menu-divider"></div>
 
+    <button class="menu-item" id="theme-toggle-btn" onclick="toggleTheme()">
+      <div class="menu-item-icon" style="background:#1A1A2E" id="theme-toggle-icon">☀️</div>
+      <div class="menu-item-info"><strong id="theme-toggle-label">Modo Claro</strong><span id="theme-toggle-sub">Mudar para tema claro</span></div>
+    </button>
+
+    <div class="menu-divider"></div>
+
     <button class="menu-item" onclick="closeSideMenu(); confirmarLimparRegistro()">
       <div class="menu-item-icon" style="background:#2D0E0E">🗑️</div>
       <div class="menu-item-info" style="color:var(--red-text)"><strong style="color:var(--red-text)">Novo Registro</strong><span>Limpar todos os dados</span></div>
@@ -1118,6 +1179,10 @@ function renderItem(it) {
     ? `<span style="width:7px;height:7px;border-radius:50%;background:var(--amber-border);flex-shrink:0;display:inline-block"></span>`
     : `<span style="width:7px;height:7px;border-radius:50%;background:var(--green-border);flex-shrink:0;display:inline-block"></span>`;
 
+  // Badge de produto repetido: aparece se outro item já usa o mesmo código
+  const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
+  const dupBadge = isDup ? `<span class="dup-badge">⚠ repetido</span>` : '';
+
   el.innerHTML = `
     <div class="item-header" onclick="toggleItem(${it.id})">
       ${dot}
@@ -1126,6 +1191,7 @@ function renderItem(it) {
         <div class="item-summary-code">${it.cod||'—'} · ${it.desc||'Sem descrição'}</div>
         <div class="item-summary-tags">${tipoTag}${natTag}${it.qtd?`<span class="item-summary-tag">${it.qtd} ${it.unid||''}</span>`:''}</div>
       </div>
+      ${dupBadge}
       <button class="remove-btn" onclick="event.stopPropagation();removeItem(${it.id})">×</button>
       <span class="item-chevron ${isOpen?'open':''}">▼</span>
     </div>
@@ -1349,6 +1415,36 @@ function updateItemHeader(id) {
   // update badge number
   const badge = el.querySelector('.item-badge');
   if (badge) badge.textContent = idx;
+  // atualizar badge de produto repetido (e re-verificar todos os itens com mesmo cod)
+  const isDup = it.cod && it.cod.length >= 5 && items.filter(i => i.cod === it.cod).length > 1;
+  let dupEl = el.querySelector('.dup-badge');
+  if (isDup && !dupEl) {
+    // inserir badge antes do remove-btn
+    const removeBtn = el.querySelector('.remove-btn');
+    if (removeBtn) {
+      dupEl = document.createElement('span');
+      dupEl.className = 'dup-badge';
+      dupEl.textContent = '⚠ repetido';
+      removeBtn.parentNode.insertBefore(dupEl, removeBtn);
+    }
+  } else if (!isDup && dupEl) {
+    dupEl.remove();
+  }
+  // atualizar outros itens com mesmo código (para remover badge quando duplicata é corrigida)
+  items.forEach(other => {
+    if (other.id !== it.id && other.cod === it.cod) {
+      const otherEl = document.getElementById('item-' + other.id);
+      if (otherEl) {
+        const otherDup = otherEl.querySelector('.dup-badge');
+        const stillDup = items.filter(i => i.cod === other.cod).length > 1;
+        if (!stillDup && otherDup) otherDup.remove();
+        else if (stillDup && !otherDup) {
+          const rb = otherEl.querySelector('.remove-btn');
+          if (rb) { const d = document.createElement('span'); d.className='dup-badge'; d.textContent='⚠ repetido'; rb.parentNode.insertBefore(d,rb); }
+        }
+      }
+    }
+  });
   updateSummary();
 }
 
@@ -1453,20 +1549,6 @@ function duplicateItem(id) {
 }
 
 // ── PHOTOS ──
-function addPhoto(id, input) {
-  const it = items.find(x => x.id === id); if (!it) return;
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    if (!it.photos) it.photos = [];
-    it.photos.push(e.target.result);
-    renderPhotos(id, it.photos);
-    saveDraft();
-  };
-  reader.readAsDataURL(file);
-  input.value = '';
-}
-
 function renderPhotos(id, photos) {
   const el = document.getElementById('photos-' + id); if (!el) return;
   el.innerHTML = (photos||[]).map((src, i) =>
@@ -1487,12 +1569,49 @@ function delPhoto(id, idx) {
 // ── FOTOS DO PALETE ──
 let paletePhotos = [];
 
+// ── COMPRESSÃO DE FOTOS (Canvas API) ──
+// Reduz para max 1200px e qualidade 70% antes de usar no PDF/sessão
+// Reduz de ~3-5 MB por foto para ~200-400 KB — PDF final 10x menor
+function compressImage(dataUrl, maxW, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxW / Math.max(img.width, img.height));
+      const w = Math.round(img.width  * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl); // fallback: usa original se falhar
+    img.src = dataUrl;
+  });
+}
+
+function addPhoto(id, input) {
+  const it = items.find(x => x.id === id); if (!it) return;
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    if (!it.photos) it.photos = [];
+    const compressed = await compressImage(e.target.result, 1200, 0.70);
+    it.photos.push(compressed);
+    renderPhotos(id, it.photos);
+    saveDraft();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
 function addPaletePhoto(input) {
   const files = Array.from(input.files);
   files.forEach(file => {
     const reader = new FileReader();
-    reader.onload = e => {
-      paletePhotos.push(e.target.result);
+    reader.onload = async e => {
+      const compressed = await compressImage(e.target.result, 1200, 0.70);
+      paletePhotos.push(compressed);
       renderPaletePhotos();
       saveDraft();
     };
@@ -2362,15 +2481,13 @@ function closeConfirmModal() {
   document.getElementById('confirm-modal').style.display = 'none';
 }
 
-// ── ALERTA PRODUTO RECORRENTE ──
+// ── ALERTA PRODUTO REPETIDO ──
+// O badge laranja "⚠ repetido" aparece diretamente no card via updateItemHeader.
+// Esta função foi mantida por compatibilidade (chamada em acSelect).
 function checkProdutoRecorrente(cod) {
   if (!cod || cod.length < 5) return;
-  const hist = JSON.parse(localStorage.getItem('avaria_draft')||'{}');
-  // conta quantas vezes o código aparece nos itens atuais
-  const count = items.filter(i => i.cod === cod).length;
-  if (count >= 2) {
-    showToast(`⚠️ Produto ${cod} aparece ${count}x neste registro!`);
-  }
+  // A detecção visual é feita em tempo real por updateItemHeader.
+  // Não usa mais toast — o badge persistente no card é suficiente.
 }
 
 // ── EXPORTAR EXCEL (.xlsx) ──
@@ -2648,6 +2765,24 @@ function closeSideMenu() {
   document.getElementById('side-menu').classList.remove('open');
   document.getElementById('menu-overlay').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// ── TEMA CLARO / ESCURO ──
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('avariapp_theme', theme); } catch(e) {}
+  const isLight = theme === 'light';
+  const icon  = document.getElementById('theme-toggle-icon');
+  const label = document.getElementById('theme-toggle-label');
+  const sub   = document.getElementById('theme-toggle-sub');
+  if (icon)  icon.textContent  = isLight ? '🌙' : '☀️';
+  if (label) label.textContent = isLight ? 'Modo Escuro' : 'Modo Claro';
+  if (sub)   sub.textContent   = isLight ? 'Mudar para tema escuro' : 'Mudar para tema claro';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
 }
 
 // ── LIMPAR REGISTRO (modal seguro, sem confirm() bloqueado em PWA) ──
@@ -2951,6 +3086,9 @@ function installPWA() {
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
+  // Aplica tema salvo (antes de qualquer render, evita flash)
+  const savedTheme = (() => { try { return localStorage.getItem('avariapp_theme') || 'dark'; } catch(e) { return 'dark'; } })();
+  applyTheme(savedTheme);
   // Preenche versão em todos os locais da UI
   const v = 'v' + APP_VERSION;
   const hv = document.getElementById('header-version');
