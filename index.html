@@ -192,6 +192,69 @@
   .screen.exit-right { opacity: 0; transform: translateX(50px);  pointer-events: none; position: absolute; }
   .screens-wrapper   { position: relative; overflow: hidden; }
 
+  /* ── Barra de totais ao vivo (tela 2) ── */
+  .live-totals-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .live-total-chip {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--bg-item); border-radius: var(--radius-sm);
+    padding: 5px 12px; flex: 1; min-width: 56px;
+  }
+  .live-total-chip .lv { font-size: 16px; font-weight: 700; }
+  .live-total-chip .ll { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .live-itens { color: #79C0FF; }
+  .live-cx    { color: var(--green-text); }
+  .live-un    { color: var(--amber-text); }
+  .live-paletes-wrap {
+    display: flex; align-items: center; gap: 6px;
+    flex: 1; min-width: 90px;
+  }
+  .live-paletes-wrap label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+  .live-paletes-wrap input {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    background: var(--bg-item); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 5px 8px;
+    width: 60px; text-align: center; font-family: inherit;
+    outline: none;
+  }
+  .live-paletes-wrap input:focus { border-color: var(--border-focus); }
+
+  /* ── Botão Finalizar flutuante ── */
+  .fin-btn-wrap {
+    margin-top: 14px; margin-bottom: 8px;
+  }
+  .fin-btn {
+    width: 100%; padding: 15px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-lg);
+    font-size: 15px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    transition: background .15s, transform .1s;
+    letter-spacing: .02em;
+  }
+  .fin-btn:active { transform: scale(.98); }
+  .fin-btn.ready {
+    background: #238636;
+  }
+
+  /* ── Observações colapsável ── */
+  .obs-toggle-btn {
+    width: 100%; padding: 9px 14px;
+    background: transparent; border: 1px dashed var(--border);
+    border-radius: var(--radius-md); color: var(--text-muted);
+    font-size: 13px; font-family: inherit; cursor: pointer;
+    text-align: left; margin-top: 8px;
+    transition: border-color .15s, color .15s;
+  }
+  .obs-toggle-btn:hover { border-color: var(--border-focus); color: var(--text); }
+
   /* ── Card ── */
   .card {
     background: var(--bg-card);
@@ -626,9 +689,7 @@
   <div class="screens-wrapper">
   <div class="screen active" id="screen-1">
     <div class="card" id="card-identificacao">
-      <div class="card-title">
-        Dados do Registro
-      </div>
+      <div class="card-title">Dados do Registro</div>
       <div class="row2">
         <div class="field">
           <label>Câmara <span class="req">*</span></label>
@@ -658,10 +719,37 @@
         </div>
       </div>
     </div>
+    <button class="fin-btn" onclick="goToScreen(2)" style="margin-top:4px">Próximo: Registrar itens →</button>
   </div>
 
-  <!-- ═══ TELA 2: ADICIONAR ITEM ═══ -->
+  <!-- ═══ TELA 2: ITENS + TOTAIS AO VIVO ═══ -->
   <div class="screen" id="screen-2">
+
+    <!-- Barra de totais ao vivo -->
+    <div class="live-totals-bar" id="live-totals-bar">
+      <div class="live-total-chip">
+        <span class="lv live-itens" id="live-nitens">0</span>
+        <span class="ll">Itens</span>
+      </div>
+      <div class="live-total-chip">
+        <span class="lv live-cx" id="live-cx">0</span>
+        <span class="ll">CX</span>
+      </div>
+      <div class="live-total-chip">
+        <span class="lv live-un" id="live-un">0</span>
+        <span class="ll">UN</span>
+      </div>
+      <div class="live-paletes-wrap">
+        <label for="tot-paletes">Paletes</label>
+        <input id="tot-paletes" type="number" min="0" placeholder="0" oninput="saveDraft(); buildQRCode()">
+      </div>
+    </div>
+
+    <!-- Inputs ocultos — mantêm IDs usados pelo JS de PDF/Excel/validação -->
+    <input id="tot-caixas"   type="hidden" value="">
+    <input id="tot-unidades" type="hidden" value="">
+
+    <!-- Lista de itens -->
     <div class="card" id="card-itens">
       <div class="card-title">Itens avariados</div>
       <button class="add-btn" onclick="addItem()">+ Adicionar item</button>
@@ -674,34 +762,39 @@
         <div class="summary-list" id="summary-list"></div>
       </div>
     </div>
+
+    <!-- Observações colapsável -->
+    <button class="obs-toggle-btn" id="obs-toggle" onclick="toggleObs()">+ Adicionar observação</button>
+    <div id="obs-body" style="display:none;margin-top:6px">
+      <div class="card" style="margin-bottom:0">
+        <div class="field" style="margin-bottom:0">
+          <textarea id="obs" rows="3" placeholder="Descreva ocorrências ou informações adicionais..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão Finalizar -->
+    <div class="fin-btn-wrap">
+      <button class="fin-btn" id="fin-btn" onclick="goToScreen(3)">Finalizar registro →</button>
+    </div>
   </div>
 
-  <!-- ═══ TELA 3: TOTAIS ═══ -->
+  <!-- ═══ TELA 3: FINALIZAR ═══ -->
   <div class="screen" id="screen-3">
-    <div class="card" id="card-totais">
-      <div class="card-title">Resumo de Quantidades</div>
-      <div class="row3">
-        <div class="field"><label>Total de Paletes</label><input id="tot-paletes" type="number" min="0" placeholder="0"></div>
-        <div class="field"><label>Total de Caixas (CX)</label><input id="tot-caixas" type="number" placeholder="0" readonly style="background:var(--bg-item);color:var(--green-text);font-weight:600;cursor:default;border-color:var(--green-border)"></div>
-        <div class="field"><label>Total de Unidades (UN)</label><input id="tot-unidades" type="number" placeholder="0" readonly style="background:var(--bg-item);color:var(--amber-text);font-weight:600;cursor:default;border-color:var(--amber-border)"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Observações</div>
-      <div class="field">
-        <textarea id="obs" rows="4" placeholder="Descreva ocorrências ou informações adicionais..."></textarea>
-      </div>
-    </div>
-  </div>
 
-  <!-- ═══ TELA 4: FOTOS E ASSINATURA ═══ -->
-  <div class="screen" id="screen-4">
+    <!-- Resumo rápido -->
+    <div class="card" id="card-resumo-final" style="background:var(--blue-bg);border-color:var(--blue-border)">
+      <div class="card-title">Resumo do Registro</div>
+      <div id="resumo-final-content"></div>
+    </div>
+
+    <!-- Fotos do palete -->
     <div class="card" id="card-fotos">
       <div class="card-title">Fotos do Palete</div>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Tire fotos do palete com as avarias para registrar no PDF.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Tire fotos das avarias para incluir no PDF.</p>
       <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--accent-dim);border-radius:var(--radius-sm);margin-bottom:10px">
         <span style="font-size:14px;flex-shrink:0">📌</span>
-        <p style="font-size:11px;color:var(--blue-text);line-height:1.5">As fotos aparecem no PDF mas <strong>não ficam salvas</strong> — se fechar o app antes de gerar o PDF, precisará tirar novamente.</p>
+        <p style="font-size:11px;color:var(--blue-text);line-height:1.5">As fotos aparecem no PDF mas <strong>não ficam salvas</strong> — gere o PDF antes de fechar o app.</p>
       </div>
       <div class="photo-preview" id="palete-photos"></div>
       <div style="margin-top:8px">
@@ -711,6 +804,8 @@
         </label>
       </div>
     </div>
+
+    <!-- Assinatura -->
     <div class="card" id="card-assinatura">
       <div class="card-title">Assinatura do Operador</div>
       <canvas id="sig-canvas" class="sig-canvas"></canvas>
@@ -719,16 +814,8 @@
         <span id="draft-lbl" class="draft-badge" style="display:none">Rascunho salvo</span>
       </div>
     </div>
-  </div>
 
-  <!-- ═══ TELA 5: AÇÕES ═══ -->
-  <div class="screen" id="screen-5">
-    <!-- Resumo rápido -->
-    <div class="card" id="card-resumo-final" style="background:var(--blue-bg);border-color:var(--blue-border)">
-      <div class="card-title">Resumo do Registro</div>
-      <div id="resumo-final-content"></div>
-    </div>
-
+    <!-- Exportar -->
     <div class="action-btns">
       <button class="gen-btn" onclick="confirmarGerar('pdf')">⬇ Gerar PDF</button>
       <button class="wa-btn" onclick="confirmarGerar('wa')">📲 WhatsApp</button>
@@ -842,36 +929,8 @@
     </button>
 
     <button class="menu-item" onclick="closeSideMenu(); goToScreen(3)">
-      <div class="menu-item-icon" style="background:#2D1B00">🔢</div>
-      <div class="menu-item-info"><strong>Totais</strong><span>CX, UN e Paletes</span></div>
-    </button>
-
-    <button class="menu-item" onclick="closeSideMenu(); goToScreen(4)">
-      <div class="menu-item-icon" style="background:#1A1A2E">📷</div>
-      <div class="menu-item-info"><strong>Fotos e Assinatura</strong><span id="menu-fotos-count">Nenhuma foto</span></div>
-    </button>
-
-    <button class="menu-item" onclick="closeSideMenu(); goToScreen(5)">
       <div class="menu-item-icon" style="background:#0C1F3E">✅</div>
       <div class="menu-item-info"><strong>Finalizar</strong><span>PDF, WhatsApp, Excel</span></div>
-    </button>
-
-    <div class="menu-divider"></div>
-    <p class="menu-section-label">Ações</p>
-
-    <button class="menu-item" onclick="closeSideMenu(); confirmarGerar('pdf')">
-      <div class="menu-item-icon" style="background:#0C1F3E">⬇️</div>
-      <div class="menu-item-info"><strong>Gerar PDF</strong><span>Resumo e confirmação</span></div>
-    </button>
-
-    <button class="menu-item" onclick="closeSideMenu(); confirmarGerar('wa')">
-      <div class="menu-item-icon" style="background:#0A2E1A">📲</div>
-      <div class="menu-item-info"><strong>Enviar WhatsApp</strong><span>Texto + PDF em anexo</span></div>
-    </button>
-
-    <button class="menu-item" onclick="closeSideMenu(); exportarExcel()">
-      <div class="menu-item-icon" style="background:#0D2818">📊</div>
-      <div class="menu-item-info"><strong>Exportar Excel</strong><span>Arquivo .csv / .xlsx</span></div>
     </button>
 
     <div class="menu-divider"></div>
@@ -1296,8 +1355,40 @@ function updateItemHeader(id) {
 function recalcCaixas() {
   const totalCX = items.reduce((sum, it) => it.unid === 'CX' ? sum + (parseFloat(it.qtd) || 0) : sum, 0);
   const totalUN = items.reduce((sum, it) => it.unid === 'UN' ? sum + (parseFloat(it.qtd) || 0) : sum, 0);
-  document.getElementById('tot-caixas').value   = totalCX > 0 ? totalCX : '';
-  document.getElementById('tot-unidades').value = totalUN > 0 ? totalUN : '';
+  // hidden inputs — mantêm compatibilidade com PDF/Excel/validação
+  const elCX = document.getElementById('tot-caixas');
+  const elUN = document.getElementById('tot-unidades');
+  if (elCX) elCX.value = totalCX > 0 ? totalCX : '';
+  if (elUN) elUN.value = totalUN > 0 ? totalUN : '';
+  // atualiza barra ao vivo
+  updateLiveTotalsBar(totalCX, totalUN);
+}
+
+function updateLiveTotalsBar(cx, un) {
+  const ni = document.getElementById('live-nitens');
+  const lc = document.getElementById('live-cx');
+  const lu = document.getElementById('live-un');
+  if (ni) ni.textContent = items.length;
+  if (lc) lc.textContent = cx || 0;
+  if (lu) lu.textContent = un || 0;
+
+  // botão Finalizar: fica verde quando todos os itens têm cod+tipo+natureza
+  const btn = document.getElementById('fin-btn');
+  if (btn) {
+    const allOk = items.length > 0 && items.every(i => i.cod && i.tipo && i.natureza);
+    btn.classList.toggle('ready', allOk);
+    btn.textContent = allOk ? '✓ Tudo certo — Finalizar →' : 'Finalizar registro →';
+  }
+}
+
+function toggleObs() {
+  const body = document.getElementById('obs-body');
+  const btn  = document.getElementById('obs-toggle');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (btn) btn.textContent = open ? '+ Adicionar observação' : '− Ocultar observação';
+  if (!open) setTimeout(() => document.getElementById('obs')?.focus(), 80);
 }
 
 function selTag(id, field, code, cls) {
@@ -2379,9 +2470,7 @@ function initHeaderLogo() {
 const SCREENS = [
   { id: 1, title: 'Identificação' },
   { id: 2, title: 'Itens Avariados' },
-  { id: 3, title: 'Totais' },
-  { id: 4, title: 'Fotos e Assinatura' },
-  { id: 5, title: 'Finalizar' },
+  { id: 3, title: 'Finalizar' },
 ];
 let currentScreen = 1;
 
@@ -2408,8 +2497,8 @@ function goToScreen(n) {
     }
   }
 
-  // Confirmação antes de ir para a tela 5
-  if (n === 5) {
+  // Confirmação antes de ir para a tela Finalizar (tela 3)
+  if (n === 3) {
     confirmarFinalizacao();
     return;
   }
@@ -2460,10 +2549,10 @@ function _goToScreen(n) {
   currentScreen = n;
   const sub = document.getElementById('header-subtitle');
   if (sub) sub.textContent = SCREENS[n-1].title;
-  if (n === 4 && typeof sigCanvas !== 'undefined' && sigCanvas) {
+  if (n === 3 && typeof sigCanvas !== 'undefined' && sigCanvas) {
     setTimeout(() => { sigCanvas.width = sigCanvas.offsetWidth; }, 300);
   }
-  if (n === 5) updateResumoFinal();
+  if (n === 3) updateResumoFinal();
   saveDraft();
 }
 
@@ -2480,7 +2569,7 @@ function confirmarFinalizacao() {
   if (semFotos) avisos.push('📷 Nenhuma foto do palete tirada.');
 
   if (avisos.length === 0) {
-    _goToScreen(5);
+    _goToScreen(3);
     return;
   }
 
@@ -2498,7 +2587,7 @@ function confirmarFinalizacao() {
   const btn = document.getElementById('confirm-action-btn');
   if (btn) {
     btn.textContent = '✓ Continuar e Finalizar';
-    btn.onclick = () => { closeConfirmModal(); _goToScreen(5); };
+    btn.onclick = () => { closeConfirmModal(); _goToScreen(3); };
   }
   document.getElementById('confirm-modal').style.display = 'flex';
 }
@@ -2549,13 +2638,10 @@ function openSideMenu() {
   document.getElementById('side-menu').classList.add('open');
   document.getElementById('menu-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  // update dynamic info
   const proto = document.getElementById('menu-proto');
   if (proto) proto.textContent = protocoloAtual || '—';
   const itensCount = document.getElementById('menu-itens-count');
   if (itensCount) itensCount.textContent = `${items.length} item${items.length!==1?'s':''}`;
-  const fotosCount = document.getElementById('menu-fotos-count');
-  if (fotosCount) fotosCount.textContent = paletePhotos.length > 0 ? `${paletePhotos.length} foto${paletePhotos.length>1?'s':''}` : 'Nenhuma foto';
 }
 
 function closeSideMenu() {
@@ -2652,11 +2738,10 @@ function importarConfig(input) {
 function scrollToCard(id) {
   const screenMap = {
     'card-identificacao': 1,
-    'card-itens': 2,
-    'card-totais': 3,
-    'card-fotos': 4,
-    'card-assinatura': 4,
-    'card-relatorio': 5,
+    'card-itens':         2,
+    'card-fotos':         3,
+    'card-assinatura':    3,
+    'card-resumo-final':  3,
   };
   const n = screenMap[id] || 1;
   _goToScreen(n);
@@ -2883,12 +2968,32 @@ document.addEventListener('DOMContentLoaded', () => {
   initHeaderLogo();
   goToScreen(1);
 
+  // Preenche data de hoje automaticamente (se vazia)
+  const dataEl = document.getElementById('data');
+  if (dataEl && !dataEl.value) {
+    const hoje = new Date();
+    const dd   = String(hoje.getDate()).padStart(2, '0');
+    const mm   = String(hoje.getMonth() + 1).padStart(2, '0');
+    const aaaa = hoje.getFullYear();
+    dataEl.value = `${dd}/${mm}/${aaaa}`;
+  }
+
+  // Detecta turno pelo horário atual (se não selecionado)
+  const turnoEl = document.getElementById('turno');
+  if (turnoEl && !turnoEl.value) {
+    const h = new Date().getHours();
+    if      (h >= 6  && h < 14) turnoEl.value = '1º Turno';
+    else if (h >= 14 && h < 22) turnoEl.value = '2º Turno';
+    else                         turnoEl.value = '3º Turno';
+  }
+
+  // Autosave nos campos de identificação e paletes
   ['camara','operador','matricula','supervisor','data','turno','tot-paletes','obs'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', () => { saveDraft(); buildQRCode(); });
+    document.getElementById(id)?.addEventListener('input',  () => { saveDraft(); buildQRCode(); });
     document.getElementById(id)?.addEventListener('change', () => { saveDraft(); buildQRCode(); });
   });
 
-  // Tenta restaurar rascunho existente (texto e estrutura — fotos sao sessao-apenas)
+  // Tenta restaurar rascunho existente
   const hasDraft = localStorage.getItem('avaria_draft');
   if (hasDraft) {
     try {
