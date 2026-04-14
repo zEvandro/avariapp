@@ -874,6 +874,7 @@
       <span>Acesso rápido, funciona offline</span>
     </div>
     <button class="install-card-btn" onclick="onInstallClick()">Instalar</button>
+    <button onclick="dismissInstallBanner()" style="background:transparent;border:none;color:#7D8590;font-size:20px;cursor:pointer;padding:0 0 0 4px;line-height:1;flex-shrink:0" aria-label="Fechar">×</button>
   </div>
 
   <!-- Modal de instruções (iOS e outros sem prompt nativo) -->
@@ -3406,16 +3407,19 @@ function dismissInstallBanner() {
 // Clique no botão "Instalar"
 function onInstallClick() {
   if (deferredInstallPrompt) {
-    // Android/Chrome: abre o prompt nativo do sistema
+    // Android/Chrome: dispara o diálogo nativo de instalação do sistema
     deferredInstallPrompt.prompt();
     deferredInstallPrompt.userChoice.then(choice => {
       deferredInstallPrompt = null;
-      hideInstallCard();
-      if (choice.outcome === 'accepted') showToast('AvariApp instalado!', 'success');
-      else try { localStorage.setItem('pwa_dismissed', String(Date.now())); } catch(e) {}
+      if (choice.outcome === 'accepted') {
+        hideInstallCard();
+        showToast('Instalando AvariApp...', 'success');
+      }
+      // Se recusou: guarda o prompt por mais 7 dias antes de perguntar novamente
+      else { try { localStorage.setItem('pwa_dismissed', String(Date.now())); } catch(e) {} }
     });
   } else {
-    // iOS / outros browsers: abre modal com instruções passo a passo
+    // iOS: só chega aqui pelo card iOS — abre modal com instruções do Safari
     abrirModalInstalacao();
   }
 }
@@ -3469,21 +3473,24 @@ function setupPWA() {
   window.addEventListener('online',  updateNetDot);
   window.addEventListener('offline', updateNetDot);
 
-  // Captura o prompt nativo do Chrome/Android
+  // Android/Chrome: SÓ mostra o card quando o Chrome confirma que pode instalar
+  // beforeinstallprompt só dispara quando o app atende todos os critérios PWA
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
+    e.preventDefault();           // impede o mini-infobar automático do Chrome
+    deferredInstallPrompt = e;    // guarda o prompt para usar quando o usuário clicar
+    showInstallCard();            // agora sim: mostra o card (prompt está pronto)
   });
 
+  // Quando instalado: esconde o card e confirma
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     hideInstallCard();
     showToast('AvariApp instalado!', 'success');
   });
 
-  // Mostra o card após 2s se não instalado
-  if (!isPWAInstalled()) {
-    setTimeout(showInstallCard, 2000);
+  // iOS Safari: não tem beforeinstallprompt — mostra card com instruções após 3s
+  if (isIOS() && !isPWAInstalled()) {
+    setTimeout(showInstallCard, 3000);
   }
 
   if ('serviceWorker' in navigator) {
