@@ -859,7 +859,7 @@
     </div>
     <div class="header-text">
       <h1>AvariApp <span id="header-version" style="font-size:10px;font-weight:400;color:var(--text-muted);letter-spacing:.02em"></span></h1>
-      <p id="header-subtitle">Lactalis Brasil</p>
+      <p id="header-subtitle">Lactalis Brasil - CD RJ</p>
     </div>
     <span id="net-dot" title="Status de conexão" style="width:8px;height:8px;border-radius:50%;background:var(--green-border);flex-shrink:0;margin-left:auto"></span>
   </div>
@@ -956,7 +956,7 @@
 
     <!-- Lista de itens -->
     <div class="card" id="card-itens">
-      <div class="card-title">Itens avariados</div>
+      <div class="card-title">Itens Avariados</div>
       <button class="add-btn" onclick="addItem()">+ Adicionar item</button>
       <div id="items-list"></div>
       <div id="summary-panel" class="summary-panel" style="display:none">
@@ -1126,7 +1126,7 @@
     <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAABMNUlEQVR4nO29AQAA" alt="L">
     <div class="side-menu-header-text">
       <h3>AvariApp</h3>
-      <p id="side-menu-version-label">Lactalis Brasil</p>
+      <p id="side-menu-version-label">Lactalis Brasil CD RJ</p>
     </div>
     <button class="side-menu-close" onclick="closeSideMenu()">×</button>
   </div>
@@ -1195,7 +1195,7 @@
   </div>
 
   <div class="side-menu-footer">
-    <p>AvariApp · Lactalis Brasil</p>
+    <p>AvariApp · Evandro Silva</p>
     <p id="menu-version" style="margin-top:3px;font-size:10px;color:var(--text-muted);text-align:center;opacity:0.6"></p>
   </div>
 </div>
@@ -1277,6 +1277,8 @@ const DATA = {
       {c:'P13',l:'Vazia'},
       {c:'P14',l:'Má Aparência'},
       {c:'P15',l:'Divergência'},
+      {c:'P16',1:'Caixa Aberta'},
+      {c:'P17',1:'Paletização Incorreta'},
     ],
     causas: [
       {c:'C01',l:'Batida de Empilhadeira / Transpaleteira'},
@@ -1288,6 +1290,7 @@ const DATA = {
       {c:'C07',l:'Avaria de Carregamento'},
       {c:'C08',l:'Mal Cheiro'},
       {c:'C09',l:'Outros'},
+      {c:'C10',1:'Empilhamento Excessivo'},
     ]
   },
   F: {
@@ -1307,6 +1310,9 @@ const DATA = {
       {c:'F12',l:'Sobra'},
       {c:'F13',l:'Vazia'},
       {c:'F14',l:'Divergência'},
+      {c:'F15',1:'Peso Divergente'},
+      {c:'F16',1:'Cor Fora de Padrão'},
+      {c:'F17',1:'Presença de Corpo Estranho'},
     ],
     causas: [
       {c:'D01',l:'Data Divergente'},
