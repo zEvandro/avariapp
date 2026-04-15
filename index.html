@@ -915,12 +915,54 @@
   .field input.invalid, .field select.invalid { border-color: var(--red-border) !important; }
   .field label.invalid-lbl { color: var(--red-text) !important; }
   .val-toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: var(--red-bg); border: 1px solid var(--red-border);
-    color: var(--red-text); padding: 10px 20px; border-radius: var(--radius-md);
-    font-size: 13px; font-weight: 500; z-index: 9999; text-align: center;
-    max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    font-size: 13px; font-weight: 500;
+    z-index: 9999;
+    min-width: 260px; max-width: 90vw;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    overflow: hidden;
+    transition: opacity .22s ease, transform .22s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
   }
+  .val-toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .val-toast-inner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 16px;
+  }
+  .val-toast-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .val-toast-msg { flex: 1; line-height: 1.45; }
+  .val-toast-bar {
+    height: 3px; width: 100%;
+    transform-origin: left;
+    animation: toast-bar linear forwards;
+  }
+  @keyframes toast-bar {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+  /* Tipos */
+  .val-toast.t-error  .val-toast-icon { background: var(--red-bg);   color: var(--red-text);   }
+  .val-toast.t-error  .val-toast-msg  { color: var(--text); }
+  .val-toast.t-error  .val-toast-bar  { background: var(--red-border); }
+  .val-toast.t-success .val-toast-icon { background: var(--green-bg); color: var(--green-text); }
+  .val-toast.t-success .val-toast-msg  { color: var(--text); }
+  .val-toast.t-success .val-toast-bar  { background: var(--green-border); }
+  .val-toast.t-info   .val-toast-icon { background: var(--blue-bg);  color: var(--blue-text);  }
+  .val-toast.t-info   .val-toast-msg  { color: var(--text); }
+  .val-toast.t-info   .val-toast-bar  { background: var(--blue-border); }
 
   /* ── Rascunho saved indicator ── */
   .draft-badge {
@@ -1471,7 +1513,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.5.1';
+const APP_VERSION = '2.5.2';
 
 const DATA = {
   P: {
@@ -2391,18 +2433,44 @@ function validateForm() {
 }
 
 function showToast(msg, type = 'error') {
+  // Remove toast anterior imediatamente
   const old = document.querySelector('.val-toast');
   if (old) old.remove();
+
+  const DURATION = 4000; // ms
+
+  const icons = { error: '⚠️', success: '✓', info: 'ℹ️' };
+  const icon  = icons[type] || icons.error;
+
   const t = document.createElement('div');
-  t.className = 'val-toast';
-  if (type === 'success') {
-    t.style.background = 'var(--green-bg)';
-    t.style.borderColor = 'var(--green-border)';
-    t.style.color = 'var(--green-text)';
-  }
-  t.textContent = msg;
+  t.className = `val-toast t-${type}`;
+  t.innerHTML = `
+    <div class="val-toast-inner">
+      <div class="val-toast-icon">${icon}</div>
+      <div class="val-toast-msg">${msg}</div>
+    </div>
+    <div class="val-toast-bar" style="animation-duration:${DURATION}ms"></div>
+  `;
+
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 4000);
+
+  // Trigger slide-in na próxima frame
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => t.classList.add('show'));
+  });
+
+  // Slide-out antes de remover
+  const removeTimer = setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 240);
+  }, DURATION);
+
+  // Toque no toast cancela e fecha
+  t.addEventListener('click', () => {
+    clearTimeout(removeTimer);
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 240);
+  });
 }
 
 // ── WHATSAPP ──
