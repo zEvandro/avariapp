@@ -1513,7 +1513,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.6.0';
+const APP_VERSION = '2.6.1';
 
 const DATA = {
   P: {
@@ -2835,30 +2835,54 @@ function gerarPDF(skipValidation = false) {
 
   // ── FOTOS DO PALETE ──
   if (paletePhotos.length > 0) {
-    const neededH = 10 + Math.ceil(paletePhotos.length / 6) * 36;
+    const photoW  = 91;   // mm — 2 por linha, com gap
+    const photoH  = 68;   // mm — proporção 4:3 boa para fotos de celular
+    const photoGap = 4;   // gap entre as duas fotos na mesma linha
+    const rowH    = photoH + 8; // foto + legenda + espaço
+    const perRow  = 2;
+
+    const totalRows = Math.ceil(paletePhotos.length / perRow);
+    // Estima espaço: cabeçalho (10) + primeira linha de fotos
+    const neededH = 10 + rowH;
     needPage(neededH);
-    doc.setFillColor(45, 27, 0); doc.rect(mg, y, cw, 6, 'F');
-    doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
-    doc.text('FOTOS DO PALETE', W/2, y+4, {align:'center'}); y += 8;
-    let px = mg + 2;
-    const photoW = 30, photoH = 30, gap = 3;
+
+    // Cabeçalho da seção de fotos
+    doc.setFillColor(45, 27, 0);
+    doc.rect(mg, y, cw, 6, 'F');
+    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+    doc.text('FOTOS DO PALETE', W / 2, y + 4, { align: 'center' });
+    y += 8;
+
     paletePhotos.forEach((src, idx) => {
-      if (px + photoW > mg + cw - 2) { px = mg + 2; y += photoH + gap + 5; }
-      if (y + photoH > H - 25) {
-        doc.setFontSize(5); doc.setTextColor(150,150,150);
-        doc.text('Doc.: CHK-PICK-001  |  Rev.: 02  |  Lactalis Brasil', mg, H-7);
-        doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, W-mg, H-7, {align:'right'});
-        doc.addPage(); pageNum++; y = 10; px = mg + 2;
+      const col = idx % perRow; // 0 = esquerda, 1 = direita
+
+      // Verifica quebra de página antes de iniciar nova linha
+      if (col === 0 && idx > 0) {
+        y += rowH;
       }
+      if (y + photoH > H - 20) {
+        // Rodapé da página atual
+        doc.setFontSize(5); doc.setTextColor(150, 150, 150);
+        doc.text('Doc.: CHK-PICK-001  |  Rev.: 02  |  Lactalis Brasil', mg, H - 7);
+        doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, W - mg, H - 7, { align: 'right' });
+        doc.addPage(); pageNum++; y = 10;
+      }
+
+      // Posição X: coluna 0 = mg+2, coluna 1 = mg+2+photoW+gap
+      const px = mg + 2 + col * (photoW + photoGap);
+
       try {
-        doc.setDrawColor(100,120,150); doc.rect(px, y, photoW, photoH, 'D');
+        doc.setDrawColor(180, 190, 210);
+        doc.rect(px, y, photoW, photoH, 'D');
         doc.addImage(src, 'JPEG', px, y, photoW, photoH);
       } catch(e) {}
-      doc.setFontSize(4.5); doc.setTextColor(120,120,120);
-      doc.text(`Foto ${idx+1}`, px + photoW/2, y + photoH + 3, {align:'center'});
-      px += photoW + gap;
+
+      // Legenda
+      doc.setFontSize(6); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100);
+      doc.text(`Foto ${idx + 1}`, px + photoW / 2, y + photoH + 4.5, { align: 'center' });
     });
-    y += photoH + 10;
+
+    y += rowH + 4;
   }
 
   // ── ASSINATURA OPERADOR ──
