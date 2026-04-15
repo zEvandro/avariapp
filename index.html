@@ -333,6 +333,55 @@
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
   }
+
+  /* ── Modal de sucesso pós-PDF ── */
+  .pdf-success-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.65); z-index: 3000;
+    align-items: flex-end; justify-content: center;
+  }
+  .pdf-success-overlay.open { display: flex; }
+  .pdf-success-sheet {
+    background: var(--bg-card);
+    border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 560px;
+    padding: 28px 22px 36px;
+    animation: sheet-up .3s cubic-bezier(.4,0,.2,1);
+    text-align: center;
+  }
+  .pdf-success-check {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--green-bg); border: 2px solid var(--green-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; margin: 0 auto 16px;
+    animation: check-pop .35s .1s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes check-pop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .pdf-success-title {
+    font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px;
+  }
+  .pdf-success-proto {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+  }
+  .pdf-success-proto strong { color: var(--blue-text); }
+  .pdf-success-actions { display: flex; flex-direction: column; gap: 10px; }
+  .pdf-success-wa {
+    padding: 14px; background: #128C7E; color: #fff;
+    border: none; border-radius: var(--radius-lg);
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 8px;
+  }
+  .pdf-success-wa:active { background: #0f7062; }
+  .pdf-success-close {
+    padding: 13px; background: transparent;
+    border: 1px solid var(--border); color: var(--text-muted);
+    border-radius: var(--radius-lg); font-size: 14px;
+    font-family: inherit; cursor: pointer;
+  }
   .install-modal-title {
     font-size: 16px; font-weight: 700; color: var(--text);
     margin-bottom: 6px;
@@ -757,7 +806,7 @@
     padding: 16px;
     border: none;
     border-radius: var(--radius-lg);
-    background: var(--accent);
+    background: #1a7f3c;
     color: #fff;
     font-size: 16px;
     font-weight: 700;
@@ -767,10 +816,10 @@
     display: flex; align-items: center; justify-content: center; gap: 10px;
     letter-spacing: .01em;
     transition: background .15s, transform .1s, box-shadow .15s;
-    box-shadow: 0 3px 12px rgba(37,99,235,.35);
+    box-shadow: 0 3px 12px rgba(26,127,60,.35);
   }
-  .add-btn:hover  { background: #1d4ed8; box-shadow: 0 4px 16px rgba(37,99,235,.45); }
-  .add-btn:active { background: #1a44c0; transform: scale(.98); box-shadow: none; }
+  .add-btn:hover  { background: #15692f; box-shadow: 0 4px 16px rgba(26,127,60,.45); }
+  .add-btn:active { background: #115827; transform: scale(.98); box-shadow: none; }
   .add-btn-plus {
     width: 26px; height: 26px; border-radius: 50%;
     background: rgba(255,255,255,.22);
@@ -1192,6 +1241,21 @@
 </div>
 
 <!-- Modal Histórico de Registros -->
+<!-- Modal de sucesso pós-PDF -->
+<div id="pdf-success-modal" class="pdf-success-overlay" onclick="if(event.target===this)fecharSucessoPDF()">
+  <div class="pdf-success-sheet">
+    <div class="pdf-success-check">✓</div>
+    <div class="pdf-success-title">PDF gerado com sucesso!</div>
+    <div class="pdf-success-proto">Protocolo: <strong id="pdf-success-proto-val">—</strong></div>
+    <div class="pdf-success-actions">
+      <button class="pdf-success-wa" onclick="fecharSucessoPDF(); confirmarGerar('wa')">
+        📲 Enviar pelo WhatsApp
+      </button>
+      <button class="pdf-success-close" onclick="fecharSucessoPDF()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="hist-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharHistorico()">
   <div class="modal-sheet">
     <div class="modal-header">
@@ -1407,7 +1471,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.4.4';
+const APP_VERSION = '2.5.0';
 
 const DATA = {
   P: {
@@ -2751,6 +2815,20 @@ function gerarPDF(skipValidation = false) {
   URL.revokeObjectURL(url);
   saveLastOperator();
   salvarNoHistorico();
+  // Mostra modal de sucesso após um pequeno delay (deixa o download iniciar)
+  setTimeout(() => abrirSucessoPDF(), 400);
+}
+
+// ── MODAL DE SUCESSO PÓS-PDF ──
+function abrirSucessoPDF() {
+  const el = document.getElementById('pdf-success-proto-val');
+  if (el) el.textContent = protocoloAtual || '—';
+  const modal = document.getElementById('pdf-success-modal');
+  if (modal) modal.classList.add('open');
+}
+function fecharSucessoPDF() {
+  const modal = document.getElementById('pdf-success-modal');
+  if (modal) modal.classList.remove('open');
 }
 
 // ── GERENCIADOR DE PRODUTOS ──
