@@ -514,6 +514,13 @@
     transition: border-color .15s;
   }
   .item-card:has(.item-header:hover) { border-color: var(--border-focus); }
+  @keyframes item-slide-in {
+    from { opacity: 0; transform: translateY(-14px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0)     scale(1);   }
+  }
+  .item-card.entering {
+    animation: item-slide-in .28s cubic-bezier(.4,0,.2,1) both;
+  }
 
   /* ── Cabeçalho do card ── */
   .item-header {
@@ -1367,7 +1374,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.4.1';
+const APP_VERSION = '2.4.2';
 
 const DATA = {
   P: {
@@ -1677,12 +1684,14 @@ function addItem() {
   it.__open = true;
   items.unshift(it);
   const div = document.createElement('div');
-  div.className = 'item-card';
+  div.className = 'item-card entering';
   div.id = 'item-' + it.id;
   div.dataset.open = 'true';
   const list = document.getElementById('items-list');
   list.insertBefore(div, list.firstChild);
   renderItem(it);
+  // Remove a classe após a animação para não interferir em rerenders
+  setTimeout(() => div.classList.remove('entering'), 320);
   setTimeout(() => {
     div.scrollIntoView({behavior:'smooth', block:'start'});
     document.getElementById('cod-' + it.id)?.focus();
