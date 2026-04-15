@@ -1471,7 +1471,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.5.1';
 
 const DATA = {
   P: {
@@ -1921,13 +1921,32 @@ function recalcCaixas() {
   updateLiveTotalsBar(totalCX, totalUN);
 }
 
+// Anima um elemento numérico do valor atual até o target
+function animateCount(el, target) {
+  if (!el) return;
+  const from     = parseInt(el.textContent) || 0;
+  const to       = parseInt(target)         || 0;
+  if (from === to) return; // sem mudança — não anima
+  const duration = Math.min(300, Math.abs(to - from) * 40); // max 300ms
+  const start    = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - start) / duration);
+    // ease-out cúbico
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * ease);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = to; // garante valor exato no final
+  }
+  requestAnimationFrame(step);
+}
+
 function updateLiveTotalsBar(cx, un) {
   const ni = document.getElementById('live-nitens');
   const lc = document.getElementById('live-cx');
   const lu = document.getElementById('live-un');
-  if (ni) ni.textContent = items.length;
-  if (lc) lc.textContent = cx || 0;
-  if (lu) lu.textContent = un || 0;
+  animateCount(ni, items.length);
+  animateCount(lc, cx || 0);
+  animateCount(lu, un || 0);
 
   // botão Finalizar: fica verde quando todos os itens têm cod+tipo+natureza
   const btn = document.getElementById('fin-btn');
