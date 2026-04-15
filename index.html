@@ -1513,7 +1513,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.5.2';
+const APP_VERSION = '2.5.3';
 
 const DATA = {
   P: {
@@ -3363,43 +3363,46 @@ function updateStepper(n) {
 
 function _goToScreen(n) {
   if (n === currentScreen) return;
-  const dir = n > currentScreen ? 1 : -1; // 1 = forward, -1 = back
+  const dir = n > currentScreen ? 1 : -1;
 
   const outEl = document.getElementById('screen-' + currentScreen);
   const inEl  = document.getElementById('screen-' + n);
   if (!outEl || !inEl) return;
 
-  // prepare incoming screen (off-screen)
+  // Tela entrante: posicionada fora, sem transição
   inEl.style.transition = 'none';
   inEl.classList.remove('exit-left','exit-right');
-  inEl.style.transform = `translateX(${dir * 50}px)`;
-  inEl.style.opacity = '0';
-  inEl.style.position = 'absolute';
+  inEl.style.transform  = `translateX(${dir * 24}px)`;
+  inEl.style.opacity    = '0';
+  inEl.style.position   = 'absolute';
   inEl.style.pointerEvents = 'none';
 
-  // force reflow
+  // Forçar reflow para a transição funcionar
   inEl.offsetHeight;
 
-  // animate out current
-  outEl.style.transition = 'transform .25s cubic-bezier(.4,0,.2,1), opacity .22s ease';
-  outEl.style.transform = `translateX(${dir * -50}px)`;
-  outEl.style.opacity = '0';
+  // Duração e easing uniformes em ambas as telas
+  const EASE = 'cubic-bezier(.25,.46,.45,.94)'; // ease-out natural
+  const DUR  = '.32s';
+
+  // Saída da tela atual
+  outEl.style.transition = `transform ${DUR} ${EASE}, opacity .26s ease`;
+  outEl.style.transform  = `translateX(${dir * -24}px)`;
+  outEl.style.opacity    = '0';
   outEl.classList.remove('active');
 
-  // animate in new
-  inEl.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1), opacity .25s ease';
-  inEl.style.transform = 'translateX(0)';
-  inEl.style.opacity = '1';
+  // Entrada da tela nova
+  inEl.style.transition  = `transform ${DUR} ${EASE}, opacity .28s ease`;
+  inEl.style.transform   = 'translateX(0)';
+  inEl.style.opacity     = '1';
 
+  // Limpeza sincronizada com a duração real (320ms)
   setTimeout(() => {
-    // cleanup old
     outEl.style.cssText = '';
     outEl.classList.remove('active');
-    // activate new
-    inEl.style.cssText = '';
+    inEl.style.cssText  = '';
     inEl.classList.add('active');
     window.scrollTo(0, 0);
-  }, 280);
+  }, 320);
 
   currentScreen = n;
   const sub = document.getElementById('header-subtitle');
@@ -3409,7 +3412,7 @@ function _goToScreen(n) {
     setTimeout(() => {
       sigCanvas.width = sigCanvas.offsetWidth;
       if (sigCtx) { sigCtx.fillStyle='#ffffff'; sigCtx.fillRect(0,0,sigCanvas.width,sigCanvas.height); sigCtx.strokeStyle='#000000'; sigCtx.lineWidth=2.5; sigCtx.lineCap='round'; }
-    }, 300);
+    }, 340);
   }
   if (n === 3) updateResumoFinal();
   saveDraft();
