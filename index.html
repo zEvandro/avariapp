@@ -522,6 +522,26 @@
     animation: item-slide-in .28s cubic-bezier(.4,0,.2,1) both;
   }
 
+  /* ── Empty state (lista vazia) ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 36px 20px 28px;
+    text-align: center;
+    animation: item-slide-in .3s cubic-bezier(.4,0,.2,1) both;
+  }
+  .empty-state-icon {
+    font-size: 52px; margin-bottom: 14px;
+    opacity: .85;
+  }
+  .empty-state-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--text); margin-bottom: 6px;
+  }
+  .empty-state-sub {
+    font-size: 13px; color: var(--text-muted);
+    line-height: 1.55; max-width: 220px;
+  }
+
   /* ── Cabeçalho do card ── */
   .item-header {
     display: flex; align-items: center; gap: 10px;
@@ -1374,7 +1394,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.4.2';
+const APP_VERSION = '2.4.3';
 
 const DATA = {
   P: {
@@ -1588,8 +1608,33 @@ function collapseItem(id) {
 function updateSummary() {
   const panel = document.getElementById('summary-panel');
   const count = document.getElementById('summary-count');
+  const list  = document.getElementById('items-list');
   if (!panel) return;
-  panel.style.display = items.length > 0 ? 'block' : 'none';
+
+  // Empty state: aparece quando não há nenhum item aberto (lista vazia visualmente)
+  const emptyEl = document.getElementById('items-empty-state');
+  const hasVisibleItems = items.length > 0;
+
+  if (!hasVisibleItems) {
+    // Mostrar empty state dentro do items-list
+    if (!emptyEl) {
+      const div = document.createElement('div');
+      div.id = 'items-empty-state';
+      div.className = 'empty-state';
+      div.innerHTML = `
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">Nenhum item registrado</div>
+        <div class="empty-state-sub">Toque em <strong>+ Adicionar item</strong> para registrar a primeira avaria</div>
+      `;
+      if (list) list.appendChild(div);
+    }
+    panel.style.display = 'none';
+  } else {
+    // Remover empty state quando há itens
+    if (emptyEl) emptyEl.remove();
+    panel.style.display = 'block';
+  }
+
   if (count) count.textContent = `${items.length} iten${items.length!==1?'s':''}`;
   renderSummaryRows(items);
 }
