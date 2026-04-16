@@ -1513,7 +1513,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.6.1';
+const APP_VERSION = '2.6.2';
 
 const DATA = {
   P: {
@@ -2015,6 +2015,9 @@ function selTag(id, field, code, cls) {
   if (prev) document.getElementById(`tag-${id}-${field}-${prev}`)?.classList.remove(cls);
   it[field] = code;
   document.getElementById(`tag-${id}-${field}-${code}`)?.classList.add(cls);
+  // Atualiza a barra de status do card imediatamente e salva o rascunho
+  updateItemHeader(id);
+  saveDraft();
 }
 
 function setTipo(id, v) {
