@@ -1,8 +1,8 @@
 // ── AvariApp Service Worker ──
-// v4: cache atualizado de app + bibliotecas CDN
+// v5: cache atualizado de app + bibliotecas CDN
 
-const APP_CACHE = 'avariapp-v4';
-const CDN_CACHE = 'avariapp-cdn-v2';
+const APP_CACHE = 'avariapp-v5';
+const CDN_CACHE = 'avariapp-cdn-v3';
 const URL_BASE  = '/avariapp/';
 
 // Bibliotecas externas necessarias para PDF, QR Code e Excel

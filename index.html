@@ -231,8 +231,10 @@
     width: 34px; height: 34px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     font-size: 17px; flex-shrink: 0;
+    color: #EAF2FF;
   }
-  .menu-item-icon i { font-size:16px; line-height:1; }
+  .menu-item-icon i { font-size:16px; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
+  [data-theme="light"] .menu-item-icon { color: #EAF2FF; }
   .menu-item-info { flex: 1; }
   .menu-item-info strong { display: block; font-size: 13px; font-weight: 600; }
   .menu-item-info span  { display: block; font-size: 11px; color: var(--text-muted); margin-top: 1px; }
@@ -1518,7 +1520,7 @@ function escHtml(str) {
 }
 
 // ── Versão do app (fonte única de verdade) ──
-const APP_VERSION = '2.6.2';
+const APP_VERSION = '2.6.3';
 
 const DATA = {
   P: {

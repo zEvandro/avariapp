@@ -2,7 +2,7 @@
   "name": "AvariApp",
   "short_name": "AvariApp",
   "description": "AvariApp — Registro de avarias Câmara Fria - Lactalis Brasil",
-  "start_url": "/avariapp/?v=2.6.2",
+  "start_url": "/avariapp/?v=2.6.3",
   "scope": "/avariapp/",
   "display": "standalone",
   "background_color": "#0F1217",
