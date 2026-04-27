@@ -1,8 +1,8 @@
 // ── AvariApp Service Worker ──
-// v3: cache do app + bibliotecas CDN para uso offline completo
+// v4: cache atualizado de app + bibliotecas CDN
 
-const APP_CACHE = 'avariapp-v3';
-const CDN_CACHE = 'avariapp-cdn-v1';
+const APP_CACHE = 'avariapp-v4';
+const CDN_CACHE = 'avariapp-cdn-v2';
 const URL_BASE  = '/avariapp/';
 
 // Bibliotecas externas necessarias para PDF, QR Code e Excel
@@ -10,6 +10,8 @@ const CDN_URLS = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
+  'https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
 ];
 
 // ── INSTALL: cacheia app + CDN ──
